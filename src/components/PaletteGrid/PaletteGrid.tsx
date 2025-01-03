@@ -59,14 +59,22 @@ export function PaletteGrid({
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [ropePoints, setRopePoints] = useState<number[]>([]);
 
   const handleCellClick = (index: number) => {
+    // If we have copied cells and using any selection tool, paste at clicked position
+    if (copiedCells && (selectedTool === "multiselect" || selectedTool === "boxselect" || selectedTool === "ropeselect")) {
+      onPasteCells?.(index);
+      return;
+    }
+    
     // Always call onCellClick regardless of tool
     onCellClick(index);
     
     if (selectedTool === "select") {
       console.log('Selected cell:', index);
-      // Tooltip handling can stay here if needed
     }
   };
 
@@ -152,6 +160,92 @@ export function PaletteGrid({
     if (cells.length !== height) return null;
     const columnIndex = cells[0] % width;
     return cells.every(cell => cell % width === columnIndex) ? columnIndex : null;
+  };
+
+  const getCellsInBox = (start: number, end: number): number[] => {
+    const startRow = Math.floor(start / dimensions.width);
+    const startCol = start % dimensions.width;
+    const endRow = Math.floor(end / dimensions.width);
+    const endCol = end % dimensions.width;
+
+    const minRow = Math.min(startRow, endRow);
+    const maxRow = Math.max(startRow, endRow);
+    const minCol = Math.min(startCol, endCol);
+    const maxCol = Math.max(startCol, endCol);
+
+    const cells: number[] = [];
+    for (let row = minRow; row <= maxRow; row++) {
+      for (let col = minCol; col <= maxCol; col++) {
+        cells.push(row * dimensions.width + col);
+      }
+    }
+    return cells;
+  };
+
+  const getCellsInRope = (points: number[]): number[] => {
+    if (points.length < 2) return points;
+    
+    const cells = new Set<number>();
+    for (let i = 1; i < points.length; i++) {
+      const start = points[i - 1];
+      const end = points[i];
+      
+      const startRow = Math.floor(start / dimensions.width);
+      const startCol = start % dimensions.width;
+      const endRow = Math.floor(end / dimensions.width);
+      const endCol = end % dimensions.width;
+      
+      // Bresenham's line algorithm
+      let x = startCol;
+      let y = startRow;
+      const dx = Math.abs(endCol - startCol);
+      const dy = Math.abs(endRow - startRow);
+      const sx = startCol < endCol ? 1 : -1;
+      const sy = startRow < endRow ? 1 : -1;
+      let err = dx - dy;
+      
+      while (true) {
+        cells.add(y * dimensions.width + x);
+        if (x === endCol && y === endRow) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) {
+          err -= dy;
+          x += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y += sy;
+        }
+      }
+    }
+    return Array.from(cells);
+  };
+
+  const handleMouseDown = (index: number) => {
+    if (selectedTool === "boxselect") {
+      setSelectionStart(index);
+      setIsSelecting(true);
+    } else if (selectedTool === "ropeselect") {
+      setRopePoints([index]);
+    }
+  };
+
+  const handleMouseMove = (index: number) => {
+    if (selectedTool === "boxselect" && isSelecting && selectionStart !== null) {
+      const newSelection = getCellsInBox(selectionStart, index);
+      setSelectedCells(newSelection);
+    } else if (selectedTool === "ropeselect" && ropePoints.length > 0) {
+      if (ropePoints[ropePoints.length - 1] !== index) {
+        setRopePoints([...ropePoints, index]);
+        setSelectedCells(getCellsInRope([...ropePoints, index]));
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsSelecting(false);
+    setSelectionStart(null);
+    setRopePoints([]);
   };
 
   return (
@@ -318,7 +412,12 @@ export function PaletteGrid({
           <button
             key={index}
             onClick={() => handleCellClick(index)}
-            onMouseEnter={() => handleCellHover(index)}
+            onMouseDown={() => handleMouseDown(index)}
+            onMouseEnter={() => {
+              handleCellHover(index);
+              handleMouseMove(index);
+            }}
+            onMouseUp={handleMouseUp}
             onMouseLeave={handleHoverEnd}
             className={`aspect-square ${
               selectedTool === "paint"
