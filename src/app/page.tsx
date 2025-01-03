@@ -31,6 +31,7 @@ export default function Home() {
   const [copiedRow, setCopiedRow] = useState<number | null>(null);
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [selectedCells, setSelectedCells] = useState<number[]>([]);
+  const [copiedCells, setCopiedCells] = useState<{indices: number[], colors: string[]} | null>(null);
 
   const handleDimensionsChange = (newDimensions: {
     width: number;
@@ -204,6 +205,48 @@ export default function Home() {
     setSelectedCell(null);
   };
 
+  const handleCopyCells = (indices: number[]) => {
+    const colors = indices.map(index => palette[index]);
+    setCopiedCells({ indices, colors });
+    // Clear existing row/column copy states
+    setCopiedColumn(null);
+    setCopiedRow(null);
+  };
+
+  const handlePasteCells = (targetStartIndex: number) => {
+    if (!copiedCells) return;
+    
+    const newPalette = [...palette];
+    const { indices, colors } = copiedCells;
+    
+    // Calculate relative positions
+    const startRow = Math.floor(indices[0] / dimensions.width);
+    const startCol = indices[0] % dimensions.width;
+    const targetRow = Math.floor(targetStartIndex / dimensions.width);
+    const targetCol = targetStartIndex % dimensions.width;
+    
+    indices.forEach((sourceIndex, i) => {
+      // Calculate relative position from start
+      const relativeRow = Math.floor(sourceIndex / dimensions.width) - startRow;
+      const relativeCol = (sourceIndex % dimensions.width) - startCol;
+      
+      // Calculate target position
+      const targetIndex = (targetRow + relativeRow) * dimensions.width + (targetCol + relativeCol);
+      
+      // Only paste if target position is within grid bounds
+      if (
+        targetRow + relativeRow >= 0 &&
+        targetRow + relativeRow < dimensions.height &&
+        targetCol + relativeCol >= 0 &&
+        targetCol + relativeCol < dimensions.width
+      ) {
+        newPalette[targetIndex] = colors[i];
+      }
+    });
+    
+    setPalette(newPalette);
+  };
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
@@ -256,6 +299,9 @@ export default function Home() {
                   setPalette={setPalette}
                   setSelectedCell={setSelectedCell}
                   setSelectedCells={setSelectedCells}
+                  copiedCells={copiedCells}
+                  onCopyCells={handleCopyCells}
+                  onPasteCells={handlePasteCells}
                 />
               </div>
             </div>

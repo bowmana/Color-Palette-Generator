@@ -24,6 +24,9 @@ interface PaletteGridProps {
   setPalette?: (newPalette: string[]) => void;
   setSelectedCell: (cell: number | null) => void;
   setSelectedCells: (cells: number[]) => void;
+  onCopyCells?: (indices: number[]) => void;
+  onPasteCells?: (targetIndex: number) => void;
+  copiedCells?: { indices: number[], colors: string[] } | null;
 }
 
 export function PaletteGrid({
@@ -49,6 +52,9 @@ export function PaletteGrid({
   setPalette,
   setSelectedCell,
   setSelectedCells,
+  onCopyCells,
+  onPasteCells,
+  copiedCells,
 }: PaletteGridProps) {
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
@@ -124,6 +130,9 @@ export function PaletteGrid({
           <div className="flex gap-2">
             <button
               onClick={() => {
+                if (selectedCells.length === 0) return;
+                
+                // Check if selection forms a row or column first
                 const rowIndex = isSelectedRow(selectedCells, dimensions.width);
                 if (rowIndex !== null) {
                   onRowCopy?.(rowIndex);
@@ -135,6 +144,9 @@ export function PaletteGrid({
                   onColumnCopy?.(columnIndex);
                   return;
                 }
+
+                // If not a row or column, copy selected cells
+                onCopyCells?.(selectedCells);
               }}
               className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center gap-2 text-sm"
               title="Copy"
@@ -154,9 +166,11 @@ export function PaletteGrid({
               </svg>
               <span>Copy</span>
             </button>
-            {(copiedRow !== null || copiedColumn !== null) && (
+            {(copiedRow !== null || copiedColumn !== null || copiedCells !== null) && (
               <button
                 onClick={() => {
+                  if (selectedCells.length === 0) return;
+                  
                   const rowIndex = isSelectedRow(selectedCells, dimensions.width);
                   if (rowIndex !== null && copiedRow !== null) {
                     onRowPaste?.(rowIndex);
@@ -168,6 +182,9 @@ export function PaletteGrid({
                     onColumnPaste?.(columnIndex);
                     return;
                   }
+
+                  // If not pasting to a row or column, paste to first selected cell
+                  onPasteCells?.(selectedCells[0]);
                 }}
                 className="p-2 hover:bg-green-50 text-green-600 rounded-lg flex items-center gap-2 text-sm"
                 title="Paste"
