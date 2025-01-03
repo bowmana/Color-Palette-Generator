@@ -106,6 +106,41 @@ export function PaletteGrid({
     setPreviewPalette(null);
   };
 
+  const handleCellHover = (index: number) => {
+    if (!copiedCells) {
+      setPreviewPalette(null);
+      return;
+    }
+
+    // Create preview palette
+    const newPalette = [...palette];
+    const { indices, colors } = copiedCells;
+    
+    // Calculate relative positions (same logic as in handlePasteCells)
+    const startRow = Math.floor(indices[0] / dimensions.width);
+    const startCol = indices[0] % dimensions.width;
+    const targetRow = Math.floor(index / dimensions.width);
+    const targetCol = index % dimensions.width;
+    
+    indices.forEach((sourceIndex, i) => {
+      const relativeRow = Math.floor(sourceIndex / dimensions.width) - startRow;
+      const relativeCol = (sourceIndex % dimensions.width) - startCol;
+      
+      const targetIndex = (targetRow + relativeRow) * dimensions.width + (targetCol + relativeCol);
+      
+      if (
+        targetRow + relativeRow >= 0 &&
+        targetRow + relativeRow < dimensions.height &&
+        targetCol + relativeCol >= 0 &&
+        targetCol + relativeCol < dimensions.width
+      ) {
+        newPalette[targetIndex] = colors[i];
+      }
+    });
+    
+    setPreviewPalette(newPalette);
+  };
+
   // Helper functions to check if selected cells form a row or column
   const isSelectedRow = (cells: number[], width: number): number | null => {
     if (cells.length !== width) return null;
@@ -166,45 +201,6 @@ export function PaletteGrid({
               </svg>
               <span>Copy</span>
             </button>
-            {(copiedRow !== null || copiedColumn !== null || copiedCells !== null) && (
-              <button
-                onClick={() => {
-                  if (selectedCells.length === 0) return;
-                  
-                  const rowIndex = isSelectedRow(selectedCells, dimensions.width);
-                  if (rowIndex !== null && copiedRow !== null) {
-                    onRowPaste?.(rowIndex);
-                    return;
-                  }
-
-                  const columnIndex = isSelectedColumn(selectedCells, dimensions.width, dimensions.height);
-                  if (columnIndex !== null && copiedColumn !== null) {
-                    onColumnPaste?.(columnIndex);
-                    return;
-                  }
-
-                  // If not pasting to a row or column, paste to first selected cell
-                  onPasteCells?.(selectedCells[0]);
-                }}
-                className="p-2 hover:bg-green-50 text-green-600 rounded-lg flex items-center gap-2 text-sm"
-                title="Paste"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                <span>Paste</span>
-              </button>
-            )}
             <button
               onClick={() => {
                 // Clear selected cells
@@ -335,20 +331,24 @@ export function PaletteGrid({
           <button
             key={index}
             onClick={() => handleCellClick(index)}
+            onMouseEnter={() => handleCellHover(index)}
+            onMouseLeave={handleHoverEnd}
             className={`aspect-square ${
               selectedTool === "paint"
                 ? "hover:ring-2 hover:ring-blue-500"
-                : "hover:ring-2 hover:ring-yellow-500"
+                : copiedCells 
+                  ? "hover:ring-2 hover:ring-green-500"
+                  : "hover:ring-2 hover:ring-yellow-500"
             } ${
               selectedCell === index || selectedCells.includes(index) 
                 ? "ring-2 ring-yellow-500" 
                 : ""
             } ${
-              previewPalette && color !== palette[index]
-                ? "opacity-70" // Add slight transparency to preview
+              previewPalette && previewPalette[index] !== palette[index]
+                ? "opacity-70"
                 : ""
             } focus:outline-none focus:ring-2 focus:ring-blue-500 relative group transition-colors duration-150`}
-            style={{ backgroundColor: color }}
+            style={{ backgroundColor: previewPalette ? previewPalette[index] : color }}
           >
             {(selectedTool === "select" || selectedTool === "multiselect") && color && (
               <span className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded pointer-events-none whitespace-nowrap">

@@ -65,6 +65,11 @@ export default function Home() {
       setSelectedCells([index]);
       setSelectedColor(palette[index]);
     } else if (selectedTool === "multiselect") {
+      if (copiedCells) {
+        handlePasteCells(index);
+        return;
+      }
+      
       setSelectedCell(null);
       setSelectedCells(prev => {
         const newSelection = prev.includes(index) 
