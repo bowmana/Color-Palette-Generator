@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Tool } from "../ColorPicker/ColorPicker";
+import { AppState } from "../../app/page";
 
 interface PaletteGridProps {
   dimensions: { width: number; height: number };
@@ -27,6 +28,7 @@ interface PaletteGridProps {
   onCopyCells?: (indices: number[]) => void;
   onPasteCells?: (targetIndex: number) => void;
   copiedCells?: { indices: number[], colors: string[] } | null;
+  updateState: (updates: Partial<AppState>) => void;
 }
 
 export function PaletteGrid({
@@ -55,6 +57,7 @@ export function PaletteGrid({
   onCopyCells,
   onPasteCells,
   copiedCells,
+  updateState,
 }: PaletteGridProps) {
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
