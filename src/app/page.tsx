@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ColorPicker } from "@/components/ColorPicker/ColorPicker";
+import { ColorPicker, Tool } from "@/components/ColorPicker/ColorPicker";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
 import { GridControls } from "@/components/GridControls/GridControls";
@@ -13,15 +13,24 @@ import {
 } from "@/utils/GridOperations";
 import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
+import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";
+
+interface PaletteGridProps {
+  setPalette?: (newPalette: string[]) => void;
+  onSelectionClear?: () => void;
+}
 
 export default function Home() {
   const [selectedColor, setSelectedColor] = useState("#000000");
+  const [selectedTool, setSelectedTool] = useState<Tool>("paint");
   const [dimensions, setDimensions] = useState({ width: 16, height: 16 });
   const [palette, setPalette] = useState<string[]>(
     Array(dimensions.width * dimensions.height).fill("#ffffff")
   );
   const [copiedColumn, setCopiedColumn] = useState<number | null>(null);
   const [copiedRow, setCopiedRow] = useState<number | null>(null);
+  const [selectedCell, setSelectedCell] = useState<number | null>(null);
+  const [selectedCells, setSelectedCells] = useState<number[]>([]);
 
   const handleDimensionsChange = (newDimensions: {
     width: number;
@@ -43,9 +52,26 @@ export default function Home() {
   };
 
   const handleCellClick = (index: number) => {
-    const newPalette = [...palette];
-    newPalette[index] = selectedColor;
-    setPalette(newPalette);
+    console.log('handleCellClick called with index:', index);
+    console.log('Current tool:', selectedTool);
+
+    if (selectedTool === "paint") {
+      const newPalette = [...palette];
+      newPalette[index] = selectedColor;
+      setPalette(newPalette);
+    } else if (selectedTool === "select") {
+      setSelectedCell(index);
+      setSelectedCells([index]);
+      setSelectedColor(palette[index]);
+    } else if (selectedTool === "multiselect") {
+      setSelectedCell(null);
+      setSelectedCells(prev => {
+        const newSelection = prev.includes(index) 
+          ? prev.filter(i => i !== index)
+          : [...prev, index];
+        return newSelection;
+      });
+    }
   };
 
   const handleTransform = (layout: "horizontal" | "vertical" | "square") => {
@@ -78,36 +104,38 @@ export default function Home() {
 
   const handleColumnCopy = (columnIndex: number) => {
     setCopiedColumn(columnIndex);
-    setCopiedRow(null); // Clear row copy when copying column
+    setCopiedRow(null); // Clear copied row
   };
 
-  const handleColumnPaste = (targetColumnIndex: number) => {
-    if (copiedColumn === null) return;
+  const handleColumnPaste = (columnIndex: number) => {
+    if (copiedColumn === null || copiedColumn === columnIndex) return;
 
     const newPalette = [...palette];
     for (let row = 0; row < dimensions.height; row++) {
       const sourceIndex = row * dimensions.width + copiedColumn;
-      const targetIndex = row * dimensions.width + targetColumnIndex;
+      const targetIndex = row * dimensions.width + columnIndex;
       newPalette[targetIndex] = palette[sourceIndex];
     }
     setPalette(newPalette);
+    setCopiedColumn(null); // Clear copied column after pasting
   };
 
   const handleRowCopy = (rowIndex: number) => {
     setCopiedRow(rowIndex);
-    setCopiedColumn(null); // Clear column copy when copying row
+    setCopiedColumn(null); // Clear copied column
   };
 
-  const handleRowPaste = (targetRowIndex: number) => {
-    if (copiedRow === null) return;
+  const handleRowPaste = (rowIndex: number) => {
+    if (copiedRow === null || copiedRow === rowIndex) return;
 
     const newPalette = [...palette];
     for (let col = 0; col < dimensions.width; col++) {
       const sourceIndex = copiedRow * dimensions.width + col;
-      const targetIndex = targetRowIndex * dimensions.width + col;
+      const targetIndex = rowIndex * dimensions.width + col;
       newPalette[targetIndex] = palette[sourceIndex];
     }
     setPalette(newPalette);
+    setCopiedRow(null); // Clear copied row after pasting
   };
 
   const handleColumnRemove = (columnIndex: number) => {
@@ -144,6 +172,38 @@ export default function Home() {
     setPalette(colors);
   };
 
+  const handleCellAdjustment = (index: number, newColor: string) => {
+    const newPalette = [...palette];
+    newPalette[index] = newColor;
+    setPalette(newPalette);
+  };
+
+  const handleMultiCellAdjustment = (newColor: string) => {
+    const newPalette = [...palette];
+    selectedCells.forEach(index => {
+      newPalette[index] = newColor;
+    });
+    setPalette(newPalette);
+  };
+
+  const handleRowSelect = (rowIndex: number) => {
+    setSelectedTool("multiselect");
+    const rowCells = Array.from({ length: dimensions.width }, (_, colIndex) => 
+      rowIndex * dimensions.width + colIndex
+    );
+    setSelectedCells(rowCells);
+    setSelectedCell(null);
+  };
+
+  const handleColumnSelect = (columnIndex: number) => {
+    setSelectedTool("multiselect");
+    const columnCells = Array.from({ length: dimensions.height }, (_, rowIndex) => 
+      rowIndex * dimensions.width + columnIndex
+    );
+    setSelectedCells(columnCells);
+    setSelectedCell(null);
+  };
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
@@ -167,6 +227,8 @@ export default function Home() {
                 <ColorPicker
                   color={selectedColor}
                   onChange={setSelectedColor}
+                  selectedTool={selectedTool}
+                  onToolChange={setSelectedTool}
                 />
               </div>
 
@@ -174,6 +236,7 @@ export default function Home() {
                 <PaletteGrid
                   dimensions={dimensions}
                   selectedColor={selectedColor}
+                  selectedTool={selectedTool}
                   palette={palette}
                   onCellClick={handleCellClick}
                   onColumnClear={handleColumnClear}
@@ -186,16 +249,44 @@ export default function Home() {
                   copiedRow={copiedRow}
                   onColumnRemove={handleColumnRemove}
                   onRowRemove={handleRowRemove}
+                  selectedCell={selectedCell}
+                  selectedCells={selectedCells}
+                  onRowSelect={handleRowSelect}
+                  onColumnSelect={handleColumnSelect}
+                  setPalette={setPalette}
+                  setSelectedCell={setSelectedCell}
+                  setSelectedCells={setSelectedCells}
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
+            <div className="p-4 bg-gray-50 rounded-lg text-sm">
+              <div>Selected Tool: {selectedTool}</div>
+              <div>Selected Cell: {selectedCell !== null ? selectedCell : 'none'}</div>
+              <div>Selected Cells: {selectedCells.length}</div>
+            </div>
+
+            {selectedTool === "select" && selectedCell !== null && (
+              <CellAdjustments
+                colors={[palette[selectedCell]]}
+                onColorChange={(newColor) => handleCellAdjustment(selectedCell, newColor)}
+              />
+            )}
+            
+            {selectedTool === "multiselect" && selectedCells.length > 0 && (
+              <CellAdjustments
+                colors={selectedCells.map(index => palette[index])}
+                onColorChange={handleMultiCellAdjustment}
+              />
+            )}
+            
             <PaletteAdjustments
               palette={palette}
               onPaletteChange={setPalette}
             />
+            
             <PaletteExamples onCopyPalette={handleCopyPalette} />
           </div>
         </div>
