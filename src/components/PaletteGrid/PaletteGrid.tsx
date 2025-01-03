@@ -167,20 +167,7 @@ export function PaletteGrid({
               onClick={() => {
                 if (selectedCells.length === 0) return;
                 
-                // Check if selection forms a row or column first
-                const rowIndex = isSelectedRow(selectedCells, dimensions.width);
-                if (rowIndex !== null) {
-                  onRowCopy?.(rowIndex);
-                  return;
-                }
-
-                const columnIndex = isSelectedColumn(selectedCells, dimensions.width, dimensions.height);
-                if (columnIndex !== null) {
-                  onColumnCopy?.(columnIndex);
-                  return;
-                }
-
-                // If not a row or column, copy selected cells
+                // Always use the new copyCells system regardless of selection type
                 onCopyCells?.(selectedCells);
               }}
               className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center gap-2 text-sm"

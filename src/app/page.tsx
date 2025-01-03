@@ -199,6 +199,12 @@ export default function Home() {
     );
     setSelectedCells(rowCells);
     setSelectedCell(null);
+    
+    // If we have copied cells, paste them at the first cell of the selected row
+    if (copiedCells) {
+      handlePasteCells(rowCells[0]);
+      return;
+    }
   };
 
   const handleColumnSelect = (columnIndex: number) => {
@@ -208,6 +214,12 @@ export default function Home() {
     );
     setSelectedCells(columnCells);
     setSelectedCell(null);
+    
+    // If we have copied cells, paste them at the first cell of the selected column
+    if (copiedCells) {
+      handlePasteCells(columnCells[0]);
+      return;
+    }
   };
 
   const handleCopyCells = (indices: number[]) => {
