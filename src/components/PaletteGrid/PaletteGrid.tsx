@@ -29,6 +29,7 @@ interface PaletteGridProps {
   onPasteCells?: (targetIndex: number) => void;
   copiedCells?: { indices: number[], colors: string[] } | null;
   updateState: (updates: Partial<AppState>) => void;
+  lockedCells: number[];
 }
 
 export function PaletteGrid({
@@ -58,6 +59,7 @@ export function PaletteGrid({
   onPasteCells,
   copiedCells,
   updateState,
+  lockedCells,
 }: PaletteGridProps) {
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
@@ -65,8 +67,34 @@ export function PaletteGrid({
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [ropePoints, setRopePoints] = useState<number[]>([]);
+  const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
+  const [tempLockedCells, setTempLockedCells] = useState<number[]>([]);
 
   const handleCellClick = (index: number) => {
+    if (selectedTool === "lock") {
+      const newLockedCells = lockedCells.includes(index)
+        ? lockedCells.filter(i => i !== index)
+        : [...lockedCells, index];
+      updateState({ lockedCells: newLockedCells });
+      return;
+    }
+
+    if (selectedTool === "select") {
+      if (selectedCell === index) {
+        updateState({
+          selectedCell: null,
+          selectedCells: [],
+        });
+      } else {
+        updateState({
+          selectedCell: index,
+          selectedCells: [index],
+          selectedColor: palette[index]
+        });
+      }
+      return;
+    }
+
     // If we have copied cells and using any selection tool, paste at clicked position
     if (copiedCells && (selectedTool === "multiselect" || selectedTool === "boxselect" || selectedTool === "ropeselect")) {
       onPasteCells?.(index);
@@ -75,10 +103,6 @@ export function PaletteGrid({
     
     // Always call onCellClick regardless of tool
     onCellClick(index);
-    
-    if (selectedTool === "select") {
-      console.log('Selected cell:', index);
-    }
   };
 
   const handleColumnHover = (columnIndex: number) => {
@@ -224,31 +248,117 @@ export function PaletteGrid({
     return Array.from(cells);
   };
 
-  const handleMouseDown = (index: number) => {
+  const handleMouseDown = (index: number, event: React.MouseEvent) => {
     if (selectedTool === "boxselect") {
       setSelectionStart(index);
       setIsSelecting(true);
+      if (!event.shiftKey) {
+        updateState({ selectedCells: [] });
+      }
+      setTempSelectedCells([index]);
     } else if (selectedTool === "ropeselect") {
       setRopePoints([index]);
+      if (!event.shiftKey) {
+        updateState({ selectedCells: [] });
+      }
+      setTempSelectedCells([index]);
+    } else if (selectedTool === "boxlock") {
+      setSelectionStart(index);
+      setIsSelecting(true);
+      if (!event.shiftKey) {
+        updateState({ lockedCells: [] });
+      }
+      setTempLockedCells([index]);
+    } else if (selectedTool === "ropelock") {
+      setRopePoints([index]);
+      if (!event.shiftKey) {
+        updateState({ lockedCells: [] });
+      }
+      setTempLockedCells([index]);
     }
   };
 
   const handleMouseMove = (index: number) => {
     if (selectedTool === "boxselect" && isSelecting && selectionStart !== null) {
       const newSelection = getCellsInBox(selectionStart, index);
-      setSelectedCells(newSelection);
+      setTempSelectedCells(newSelection);
+    } else if (selectedTool === "boxlock" && isSelecting && selectionStart !== null) {
+      const cellsToLock = getCellsInBox(selectionStart, index);
+      setTempLockedCells(cellsToLock);
     } else if (selectedTool === "ropeselect" && ropePoints.length > 0) {
       if (ropePoints[ropePoints.length - 1] !== index) {
-        setRopePoints([...ropePoints, index]);
-        setSelectedCells(getCellsInRope([...ropePoints, index]));
+        const newPoints = [...ropePoints, index];
+        setRopePoints(newPoints);
+        const newSelection = getCellsInRope(newPoints);
+        setTempSelectedCells(newSelection);
+      }
+    } else if (selectedTool === "ropelock" && ropePoints.length > 0) {
+      if (ropePoints[ropePoints.length - 1] !== index) {
+        const newPoints = [...ropePoints, index];
+        setRopePoints(newPoints);
+        const cellsToLock = getCellsInRope(newPoints);
+        setTempLockedCells(cellsToLock);
       }
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (event: React.MouseEvent) => {
+    if (selectedTool === "boxselect" && tempSelectedCells.length > 0) {
+      const newSelection = event.shiftKey 
+        ? [...new Set([...selectedCells, ...tempSelectedCells])]
+        : tempSelectedCells;
+      updateState({ selectedCells: newSelection });
+    } else if (selectedTool === "ropeselect" && tempSelectedCells.length > 0) {
+      const newSelection = event.shiftKey 
+        ? [...new Set([...selectedCells, ...tempSelectedCells])]
+        : tempSelectedCells;
+      updateState({ selectedCells: newSelection });
+    } else if (selectedTool === "boxlock" && tempLockedCells.length > 0) {
+      const newLocked = event.shiftKey 
+        ? [...new Set([...lockedCells, ...tempLockedCells])]
+        : tempLockedCells;
+      updateState({ lockedCells: newLocked });
+    } else if (selectedTool === "ropelock" && tempLockedCells.length > 0) {
+      const newLocked = event.shiftKey 
+        ? [...new Set([...lockedCells, ...tempLockedCells])]
+        : tempLockedCells;
+      updateState({ lockedCells: newLocked });
+    }
     setIsSelecting(false);
     setSelectionStart(null);
     setRopePoints([]);
+    setTempSelectedCells([]);
+    setTempLockedCells([]);
+  };
+
+  const handleRowClick = (rowIndex: number) => {
+    if (selectedTool === "fillrow") {
+      const newPalette = [...palette];
+      for (let i = 0; i < dimensions.width; i++) {
+        const index = rowIndex * dimensions.width + i;
+        if (!lockedCells.includes(index)) {
+          newPalette[index] = selectedColor;
+        }
+      }
+      updateState({ palette: newPalette });
+      return;
+    }
+    // ... rest of existing row click handling
+  };
+
+  const handleColumnClick = (columnIndex: number) => {
+    if (selectedTool === "fillcolumn") {
+      const newPalette = [...palette];
+      for (let i = 0; i < dimensions.height; i++) {
+        const index = i * dimensions.width + columnIndex;
+        if (!lockedCells.includes(index)) {
+          newPalette[index] = selectedColor;
+        }
+      }
+      updateState({ palette: newPalette });
+      return;
+    }
+    // ... rest of existing column click handling
   };
 
   return (
@@ -414,13 +524,22 @@ export function PaletteGrid({
         {(previewPalette || palette).map((color, index) => (
           <button
             key={index}
-            onClick={() => handleCellClick(index)}
-            onMouseDown={() => handleMouseDown(index)}
+            onClick={() => {
+              if (selectedTool === "lock") {
+                const newLockedCells = lockedCells.includes(index)
+                  ? lockedCells.filter(i => i !== index)
+                  : [...lockedCells, index];
+                updateState({ lockedCells: newLockedCells });
+                return;
+              }
+              handleCellClick(index);
+            }}
+            onMouseDown={(e) => handleMouseDown(index, e)}
             onMouseEnter={() => {
               handleCellHover(index);
               handleMouseMove(index);
             }}
-            onMouseUp={handleMouseUp}
+            onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={handleHoverEnd}
             className={`aspect-square ${
               selectedTool === "paint"
@@ -429,12 +548,19 @@ export function PaletteGrid({
                   ? "hover:ring-2 hover:ring-green-500"
                   : "hover:ring-2 hover:ring-yellow-500"
             } ${
-              selectedCell === index || selectedCells.includes(index) 
+              (selectedCell === index || selectedCells.includes(index) || 
+               (isSelecting && tempSelectedCells.includes(index)))
                 ? "ring-2 ring-yellow-500" 
                 : ""
             } ${
               previewPalette && previewPalette[index] !== palette[index]
                 ? "opacity-70"
+                : ""
+            } ${
+              (lockedCells.includes(index) || 
+               ((selectedTool === "boxlock" || selectedTool === "ropelock") && 
+                tempLockedCells.includes(index)))
+                ? "opacity-50"
                 : ""
             } focus:outline-none focus:ring-2 focus:ring-blue-500 relative group transition-colors duration-150`}
             style={{ backgroundColor: previewPalette ? previewPalette[index] : color }}
@@ -443,6 +569,29 @@ export function PaletteGrid({
               <span className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded pointer-events-none whitespace-nowrap">
                 {color}
               </span>
+            )}
+            {(lockedCells.includes(index) || 
+              ((selectedTool === "boxlock" || selectedTool === "ropelock") && 
+               tempLockedCells.includes(index))) && (
+              <div className={`absolute inset-0 flex items-center justify-center bg-black ${
+                tempLockedCells.includes(index) ? "bg-opacity-5" : "bg-opacity-10"
+              }`}>
+                <svg 
+                  className={`w-3 h-3 ${
+                    tempLockedCells.includes(index) ? "text-gray-500" : "text-gray-700"
+                  }`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                  />
+                </svg>
+              </div>
             )}
           </button>
         ))}

@@ -32,6 +32,7 @@ export interface AppState {
   copiedCells: { indices: number[]; colors: string[] } | null;
   copiedColumn: number | null;
   copiedRow: number | null;
+  lockedCells: number[];
 }
 
 export default function Home() {
@@ -52,6 +53,7 @@ export default function Home() {
     copiedCells: null,
     copiedColumn: null,
     copiedRow: null,
+    lockedCells: [],
   });
 
   // Destructure state for easier access
@@ -65,6 +67,7 @@ export default function Home() {
     copiedCells,
     copiedColumn,
     copiedRow,
+    lockedCells,
   } = state;
 
   // Create a helper function to update state
@@ -274,7 +277,9 @@ export default function Home() {
   const handleMultiCellAdjustment = (newColor: string) => {
     const newPalette = [...palette];
     selectedCells.forEach(index => {
-      newPalette[index] = newColor;
+      if (!lockedCells.includes(index)) {
+        newPalette[index] = newColor;
+      }
     });
     updateState({
       palette: newPalette,
@@ -349,7 +354,8 @@ export default function Home() {
         targetRow + relativeRow >= 0 &&
         targetRow + relativeRow < dimensions.height &&
         targetCol + relativeCol >= 0 &&
-        targetCol + relativeCol < dimensions.width
+        targetCol + relativeCol < dimensions.width &&
+        !lockedCells.includes(targetIndex)
       ) {
         newPalette[targetIndex] = colors[i];
       }
@@ -357,7 +363,7 @@ export default function Home() {
     
     updateState({
       palette: newPalette,
-      copiedCells: null  // Clear the copied cells after pasting
+      copiedCells: null
     });
   };
 
@@ -419,9 +425,14 @@ export default function Home() {
               <div className="w-64">
                 <ColorPicker
                   color={selectedColor}
-                  onChange={handleColorChange}
+                  onChange={(color) => updateState({ selectedColor: color })}
                   selectedTool={selectedTool}
                   onToolChange={(tool) => updateState({ selectedTool: tool })}
+                  updateState={updateState}
+                  dimensions={dimensions}
+                  palette={palette}
+                  selectedCells={selectedCells}
+                  lockedCells={lockedCells}
                 />
               </div>
 
@@ -452,6 +463,7 @@ export default function Home() {
                   onCopyCells={handleCopyCells}
                   onPasteCells={handlePasteCells}
                   copiedCells={copiedCells}
+                  lockedCells={lockedCells}
                 />
               </div>
             </div>
