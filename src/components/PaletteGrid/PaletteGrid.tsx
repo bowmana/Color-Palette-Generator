@@ -70,7 +70,45 @@ export function PaletteGrid({
   const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
   const [tempLockedCells, setTempLockedCells] = useState<number[]>([]);
 
-  const handleCellClick = (index: number) => {
+  const handleCellClick = (index: number, event?: React.MouseEvent) => {
+    if (selectedTool === "rowselect") {
+      const rowIndex = Math.floor(index / dimensions.width);
+      handleRowSelect(rowIndex, event);
+      return;
+    }
+
+    if (selectedTool === "columnselect") {
+      const columnIndex = index % dimensions.width;
+      handleColumnSelect(columnIndex, event);
+      return;
+    }
+
+    if (selectedTool === "fillrow") {
+      const rowIndex = Math.floor(index / dimensions.width);
+      const newPalette = [...palette];
+      for (let i = 0; i < dimensions.width; i++) {
+        const targetIndex = rowIndex * dimensions.width + i;
+        if (!lockedCells.includes(targetIndex)) {
+          newPalette[targetIndex] = selectedColor;
+        }
+      }
+      updateState({ palette: newPalette });
+      return;
+    }
+
+    if (selectedTool === "fillcolumn") {
+      const columnIndex = index % dimensions.width;
+      const newPalette = [...palette];
+      for (let i = 0; i < dimensions.height; i++) {
+        const targetIndex = i * dimensions.width + columnIndex;
+        if (!lockedCells.includes(targetIndex)) {
+          newPalette[targetIndex] = selectedColor;
+        }
+      }
+      updateState({ palette: newPalette });
+      return;
+    }
+
     if (selectedTool === "lock") {
       const newLockedCells = lockedCells.includes(index)
         ? lockedCells.filter(i => i !== index)
@@ -95,13 +133,11 @@ export function PaletteGrid({
       return;
     }
 
-    // If we have copied cells and using any selection tool, paste at clicked position
     if (copiedCells && (selectedTool === "multiselect" || selectedTool === "boxselect" || selectedTool === "ropeselect")) {
       onPasteCells?.(index);
       return;
     }
     
-    // Always call onCellClick regardless of tool
     onCellClick(index);
   };
 
@@ -331,34 +367,74 @@ export function PaletteGrid({
     setTempLockedCells([]);
   };
 
-  const handleRowClick = (rowIndex: number) => {
-    if (selectedTool === "fillrow") {
-      const newPalette = [...palette];
-      for (let i = 0; i < dimensions.width; i++) {
-        const index = rowIndex * dimensions.width + i;
-        if (!lockedCells.includes(index)) {
-          newPalette[index] = selectedColor;
+  const handleRowSelect = (rowIndex: number, event?: React.MouseEvent) => {
+    const rowCells = Array.from({ length: dimensions.width }, (_, i) => 
+      rowIndex * dimensions.width + i
+    );
+
+    if (event?.shiftKey && selectedCells.length > 0) {
+      const lastSelectedRow = Math.floor(selectedCells[selectedCells.length - 1] / dimensions.width);
+      const startRow = Math.min(lastSelectedRow, rowIndex);
+      const endRow = Math.max(lastSelectedRow, rowIndex);
+      
+      const newSelection = [];
+      for (let row = startRow; row <= endRow; row++) {
+        for (let col = 0; col < dimensions.width; col++) {
+          newSelection.push(row * dimensions.width + col);
         }
       }
-      updateState({ palette: newPalette });
-      return;
+      
+      updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
+    } else if (event?.ctrlKey || event?.metaKey) {
+      // Check if row is already selected
+      const isRowSelected = rowCells.every(cell => selectedCells.includes(cell));
+      
+      if (isRowSelected) {
+        // Remove row from selection
+        const newSelection = selectedCells.filter(cell => !rowCells.includes(cell));
+        updateState({ selectedCells: newSelection });
+      } else {
+        // Add row to selection
+        updateState({ selectedCells: [...selectedCells, ...rowCells] });
+      }
+    } else {
+      updateState({ selectedCells: rowCells });
     }
-    // ... rest of existing row click handling
   };
 
-  const handleColumnClick = (columnIndex: number) => {
-    if (selectedTool === "fillcolumn") {
-      const newPalette = [...palette];
-      for (let i = 0; i < dimensions.height; i++) {
-        const index = i * dimensions.width + columnIndex;
-        if (!lockedCells.includes(index)) {
-          newPalette[index] = selectedColor;
+  const handleColumnSelect = (columnIndex: number, event?: React.MouseEvent) => {
+    const columnCells = Array.from({ length: dimensions.height }, (_, i) => 
+      i * dimensions.width + columnIndex
+    );
+
+    if (event?.shiftKey && selectedCells.length > 0) {
+      const lastSelectedColumn = selectedCells[selectedCells.length - 1] % dimensions.width;
+      const startCol = Math.min(lastSelectedColumn, columnIndex);
+      const endCol = Math.max(lastSelectedColumn, columnIndex);
+      
+      const newSelection = [];
+      for (let row = 0; row < dimensions.height; row++) {
+        for (let col = startCol; col <= endCol; col++) {
+          newSelection.push(row * dimensions.width + col);
         }
       }
-      updateState({ palette: newPalette });
-      return;
+      
+      updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
+    } else if (event?.ctrlKey || event?.metaKey) {
+      // Check if column is already selected
+      const isColumnSelected = columnCells.every(cell => selectedCells.includes(cell));
+      
+      if (isColumnSelected) {
+        // Remove column from selection
+        const newSelection = selectedCells.filter(cell => !columnCells.includes(cell));
+        updateState({ selectedCells: newSelection });
+      } else {
+        // Add column to selection
+        updateState({ selectedCells: [...selectedCells, ...columnCells] });
+      }
+    } else {
+      updateState({ selectedCells: columnCells });
     }
-    // ... rest of existing column click handling
   };
 
   return (
@@ -459,7 +535,7 @@ export function PaletteGrid({
             onMouseLeave={handleHoverEnd}
           >
             <button
-              onClick={() => onColumnSelect?.(columnIndex)}
+              onClick={(e) => handleColumnSelect(columnIndex, e)}
               className="p-1 hover:bg-gray-100 rounded"
               title="Select Column"
             >
@@ -492,7 +568,7 @@ export function PaletteGrid({
             style={{ height: '2rem' }}
           >
             <button
-              onClick={() => onRowSelect?.(rowIndex)}
+              onClick={(e) => handleRowSelect(rowIndex, e)}
               className="p-1 hover:bg-gray-100 rounded"
               title="Select Row"
             >
@@ -524,16 +600,7 @@ export function PaletteGrid({
         {(previewPalette || palette).map((color, index) => (
           <button
             key={index}
-            onClick={() => {
-              if (selectedTool === "lock") {
-                const newLockedCells = lockedCells.includes(index)
-                  ? lockedCells.filter(i => i !== index)
-                  : [...lockedCells, index];
-                updateState({ lockedCells: newLockedCells });
-                return;
-              }
-              handleCellClick(index);
-            }}
+            onClick={(e) => handleCellClick(index, e)}
             onMouseDown={(e) => handleMouseDown(index, e)}
             onMouseEnter={() => {
               handleCellHover(index);

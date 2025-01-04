@@ -9,6 +9,8 @@ export type Tool =
   | "boxselect" 
   | "ropeselect" 
   | "lock"
+  | "lockselected"
+  | "unlockselected"
   | "boxlock" 
   | "ropelock" 
   | "lockall" 
@@ -16,7 +18,9 @@ export type Tool =
   | "fillall"
   | "fillselected"
   | "fillrow"
-  | "fillcolumn";
+  | "fillcolumn"
+  | "rowselect"
+  | "columnselect";
 
 interface ToolGroup {
   name: string;
@@ -125,6 +129,24 @@ export function ColorPicker({
           ),
         },
         {
+          id: "rowselect",
+          title: "Row Select",
+          icon: (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M4 7h16M4 12h16" 
+            />
+          ),
+        },
+        {
+          id: "columnselect",
+          title: "Column Select",
+          icon: (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M12 4v16M7 4v16" 
+            />
+          ),
+        },
+        {
           id: "boxselect",
           title: "Box Select",
           icon: (
@@ -153,6 +175,24 @@ export function ColorPicker({
           icon: (
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+            />
+          ),
+        },
+        {
+          id: "lockselected",
+          title: "Lock Selected",
+          icon: (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2 M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" 
+            />
+          ),
+        },
+        {
+          id: "unlockselected",
+          title: "Unlock Selected",
+          icon: (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2 M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" 
             />
           ),
         },
@@ -197,6 +237,16 @@ export function ColorPicker({
   ];
 
   const handleToolClick = (toolId: Tool) => {
+    if (toolId === "lockselected" && selectedCells.length > 0) {
+      const newLockedCells = [...new Set([...lockedCells, ...selectedCells])];
+      updateState({ lockedCells: newLockedCells });
+      return;
+    }
+    if (toolId === "unlockselected" && selectedCells.length > 0) {
+      const newLockedCells = lockedCells.filter(cell => !selectedCells.includes(cell));
+      updateState({ lockedCells: newLockedCells });
+      return;
+    }
     if (toolId === "lockall") {
       const allCells = Array.from({ length: dimensions.width * dimensions.height }, (_, i) => i);
       updateState({ lockedCells: allCells });
