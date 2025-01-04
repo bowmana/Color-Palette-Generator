@@ -340,14 +340,11 @@ export default function Home() {
     const targetCol = targetStartIndex % dimensions.width;
     
     indices.forEach((sourceIndex, i) => {
-      // Calculate relative position from start
       const relativeRow = Math.floor(sourceIndex / dimensions.width) - startRow;
       const relativeCol = (sourceIndex % dimensions.width) - startCol;
       
-      // Calculate target position
       const targetIndex = (targetRow + relativeRow) * dimensions.width + (targetCol + relativeCol);
       
-      // Only paste if target position is within grid bounds
       if (
         targetRow + relativeRow >= 0 &&
         targetRow + relativeRow < dimensions.height &&
@@ -360,6 +357,7 @@ export default function Home() {
     
     updateState({
       palette: newPalette,
+      copiedCells: null  // Clear the copied cells after pasting
     });
   };
 
