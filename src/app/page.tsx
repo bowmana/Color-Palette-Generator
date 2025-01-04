@@ -20,6 +20,8 @@ interface PaletteGridProps {
   setPalette?: (newPalette: string[]) => void;
   onSelectionClear?: () => void;
   updateState: (updates: Partial<AppState>) => void;
+  handleTransform: (transformType: string, targetIndex?: number) => void;
+  onToolChange: (tool: Tool | null) => void;
 }
 
 export interface AppState {
@@ -61,7 +63,7 @@ export default function Home() {
     dimensions,
     palette,
     selectedColor,
-    selectedTool,
+    selectedTool: currentTool,
     selectedCell,
     selectedCells,
     copiedCells,
@@ -116,22 +118,26 @@ export default function Home() {
   };
 
   const handleCellClick = (index: number) => {
+    if (currentTool === "move" && selectedCells.length > 0) {
+      handleTransform("move", index);
+      return;
+    }
     console.log('handleCellClick called with index:', index);
-    console.log('Current tool:', selectedTool);
+    console.log('Current tool:', currentTool);
 
-    if (selectedTool === "paint") {
+    if (currentTool === "paint") {
       const newPalette = [...palette];
       newPalette[index] = selectedColor;
       updateState({
         palette: newPalette
       });
-    } else if (selectedTool === "select") {
+    } else if (currentTool === "select") {
       updateState({
         selectedCell: index,
         selectedCells: [index],
         selectedColor: palette[index]
       });
-    } else if (selectedTool === "multiselect") {
+    } else if (currentTool === "multiselect") {
       if (copiedCells) {
         handlePasteCells(index);
         return;
@@ -148,16 +154,142 @@ export default function Home() {
     }
   };
 
-  const handleTransform = (layout: "horizontal" | "vertical" | "square") => {
-    const { newColors, newDimensions } = transformGridLayout(
-      palette,
-      dimensions,
-      layout
-    );
-    updateState({
-      dimensions: newDimensions,
-      palette: newColors,
-    });
+  const handleTransform = (transformType: string, targetIndex?: number) => {
+    const newPalette = [...palette];
+
+    switch (transformType) {
+      case "shiftup": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = ((row - 1 + dimensions.height) % dimensions.height) * dimensions.width + col;
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "shiftdown": {
+        [...selectedCells].reverse().forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = ((row + 1) % dimensions.height) * dimensions.width + col;
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "shiftleft": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = row * dimensions.width + ((col - 1 + dimensions.width) % dimensions.width);
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "shiftright": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = row * dimensions.width + ((col + 1) % dimensions.width);
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "rotateLeft90": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = ((col + dimensions.width) % dimensions.width) * dimensions.width + (dimensions.height - 1 - row);
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "rotate180": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = (dimensions.height - 1 - row) * dimensions.width + (dimensions.width - 1 - col);
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "rotateRight90": {
+        selectedCells.forEach(index => {
+          const row = Math.floor(index / dimensions.width);
+          const col = index % dimensions.width;
+          const targetIndex = ((dimensions.width - 1 - col) + dimensions.width) % dimensions.width * dimensions.width + row;
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[index];
+            newPalette[index] = "#ffffff"; // Clear original cell
+          }
+        });
+        break;
+      }
+      case "move": {
+        if (!targetIndex || selectedCells.length === 0) return;
+        
+        const startRow = Math.floor(selectedCells[0] / dimensions.width);
+        const startCol = selectedCells[0] % dimensions.width;
+        const targetRow = Math.floor(targetIndex / dimensions.width);
+        const targetCol = targetIndex % dimensions.width;
+        
+        const rowOffset = targetRow - startRow;
+        const colOffset = targetCol - startCol;
+        
+        // Store original colors and clear cells
+        const originalColors = selectedCells.map(cellIndex => ({
+          index: cellIndex,
+          color: palette[cellIndex]
+        }));
+        
+        // Clear original cells first
+        selectedCells.forEach(cellIndex => {
+          if (!lockedCells.includes(cellIndex)) {
+            newPalette[cellIndex] = "#ffffff";
+          }
+        });
+        
+        // Move to new positions
+        originalColors.forEach(({index, color}) => {
+          const cellRow = Math.floor(index / dimensions.width);
+          const cellCol = index % dimensions.width;
+          const newRow = cellRow + rowOffset;
+          const newCol = cellCol + colOffset;
+          
+          if (
+            newRow >= 0 && 
+            newRow < dimensions.height && 
+            newCol >= 0 && 
+            newCol < dimensions.width
+          ) {
+            const targetIndex = newRow * dimensions.width + newCol;
+            if (!lockedCells.includes(targetIndex)) {
+              newPalette[targetIndex] = color;
+            }
+          }
+        });
+        break;
+      }
+    }
+    
+    updateState({ palette: newPalette });
   };
 
   const handleColumnClear = (columnIndex: number) => {
@@ -323,13 +455,19 @@ export default function Home() {
   };
 
   const handleCopyCells = (indices: number[]) => {
-    const colors = indices.map(index => palette[index]);
-    updateState({
-      copiedCells: { indices, colors },
-      selectedTool: "paint",
-      copiedColumn: null,
-      copiedRow: null,
-    });
+    // Filter out locked cells
+    const unlockedIndices = indices.filter(index => !lockedCells.includes(index));
+    
+    // Only proceed if there are unlocked cells to copy
+    if (unlockedIndices.length > 0) {
+      const colors = unlockedIndices.map(index => palette[index]);
+      updateState({
+        copiedCells: { indices: unlockedIndices, colors },
+        selectedTool: "paint",
+        copiedColumn: null,
+        copiedRow: null,
+      });
+    }
   };
 
   const handlePasteCells = (targetStartIndex: number) => {
@@ -372,6 +510,8 @@ export default function Home() {
       selectedColor: color
     });
   };
+
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   return (
     <main className="min-h-screen p-8">
@@ -426,13 +566,14 @@ export default function Home() {
                 <ColorPicker
                   color={selectedColor}
                   onChange={(color) => updateState({ selectedColor: color })}
-                  selectedTool={selectedTool}
+                  selectedTool={currentTool}
                   onToolChange={(tool) => updateState({ selectedTool: tool })}
                   updateState={updateState}
                   dimensions={dimensions}
                   palette={palette}
                   selectedCells={selectedCells}
                   lockedCells={lockedCells}
+                  handleTransform={handleTransform}
                 />
               </div>
 
@@ -440,7 +581,7 @@ export default function Home() {
                 <PaletteGrid
                   dimensions={dimensions}
                   selectedColor={selectedColor}
-                  selectedTool={selectedTool}
+                  selectedTool={currentTool}
                   palette={palette}
                   onCellClick={handleCellClick}
                   onColumnClear={handleColumnClear}
@@ -464,6 +605,8 @@ export default function Home() {
                   onPasteCells={handlePasteCells}
                   copiedCells={copiedCells}
                   lockedCells={lockedCells}
+                  handleTransform={handleTransform}
+                  onToolChange={setSelectedTool}
                 />
               </div>
             </div>
@@ -471,19 +614,19 @@ export default function Home() {
 
           <div className="space-y-6">
             <div className="p-4 bg-gray-50 rounded-lg text-sm">
-              <div>Selected Tool: {selectedTool}</div>
+              <div>Selected Tool: {currentTool}</div>
               <div>Selected Cell: {selectedCell !== null ? selectedCell : 'none'}</div>
               <div>Selected Cells: {selectedCells.length}</div>
             </div>
 
-            {selectedTool === "select" && selectedCell !== null && (
+            {currentTool === "select" && selectedCell !== null && (
               <CellAdjustments
                 colors={[palette[selectedCell]]}
                 onColorChange={(newColor) => handleCellAdjustment(selectedCell, newColor)}
               />
             )}
             
-            {selectedTool === "multiselect" && selectedCells.length > 0 && (
+            {currentTool === "multiselect" && selectedCells.length > 0 && (
               <CellAdjustments
                 colors={selectedCells.map(index => palette[index])}
                 onColorChange={handleMultiCellAdjustment}

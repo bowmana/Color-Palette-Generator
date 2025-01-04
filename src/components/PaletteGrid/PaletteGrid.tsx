@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tool } from "../ColorPicker/ColorPicker";
 import { AppState } from "../../app/page";
 
 interface PaletteGridProps {
   dimensions: { width: number; height: number };
   selectedColor: string;
-  selectedTool: Tool;
+  selectedTool: Tool | null;
   palette: string[];
   onCellClick: (index: number) => void;
+  handleTransform: (transformType: string, targetIndex?: number) => void;
   onColumnClear?: (columnIndex: number) => void;
   onRowClear?: (rowIndex: number) => void;
   onColumnCopy?: (columnIndex: number) => void;
@@ -30,6 +31,7 @@ interface PaletteGridProps {
   copiedCells?: { indices: number[], colors: string[] } | null;
   updateState: (updates: Partial<AppState>) => void;
   lockedCells: number[];
+  onToolChange: (tool: Tool | null) => void;
 }
 
 export function PaletteGrid({
@@ -38,6 +40,7 @@ export function PaletteGrid({
   selectedTool,
   palette,
   onCellClick,
+  handleTransform,
   onColumnClear,
   onRowClear,
   onColumnCopy,
@@ -60,6 +63,7 @@ export function PaletteGrid({
   copiedCells,
   updateState,
   lockedCells,
+  onToolChange,
 }: PaletteGridProps) {
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
@@ -69,17 +73,104 @@ export function PaletteGrid({
   const [ropePoints, setRopePoints] = useState<number[]>([]);
   const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
   const [tempLockedCells, setTempLockedCells] = useState<number[]>([]);
+  const [rotationPreview, setRotationPreview] = useState<string[] | null>(null);
 
-  const handleCellClick = (index: number, event?: React.MouseEvent) => {
+  // Add useEffect for escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && copiedCells) {
+        updateState({ copiedCells: null });
+        setPreviewPalette(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [copiedCells, updateState]);
+
+  // Add right click handler
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (copiedCells) {
+      updateState({ copiedCells: null });
+      setPreviewPalette(null);
+    }
+  };
+
+  // Add useEffect for escape key handling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && (selectedTool === "rotateLeft90" || selectedTool === "rotateRight90")) {
+        setRotationPreview(null);
+        onToolChange(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTool, onToolChange]);
+
+  // Add useEffect to show rotation preview immediately
+  useEffect(() => {
+    if (selectedTool && ["rotateLeft90", "rotateRight90"].includes(selectedTool) && selectedCells.length > 0) {
+      const newPalette = [...palette];
+      
+      // Clear original cells in preview
+      selectedCells.forEach(cellIndex => {
+        newPalette[cellIndex] = "#ffffff";
+      });
+      
+      // Show rotated positions
+      selectedCells.forEach(cellIndex => {
+        const row = Math.floor(cellIndex / dimensions.width);
+        const col = cellIndex % dimensions.width;
+        let targetIndex;
+        
+        if (selectedTool === "rotateLeft90") {
+          targetIndex = ((col + dimensions.width) % dimensions.width) * dimensions.width + (dimensions.height - 1 - row);
+        } else {
+          targetIndex = ((dimensions.width - 1 - col) + dimensions.width) % dimensions.width * dimensions.width + row;
+        }
+        
+        if (!lockedCells.includes(targetIndex)) {
+          newPalette[targetIndex] = palette[cellIndex];
+        }
+      });
+      
+      setPreviewPalette(newPalette);
+    } else {
+      setPreviewPalette(null);
+    }
+  }, [selectedTool, selectedCells, dimensions, palette, lockedCells]);
+
+  const handleCellClick = (index: number, e: React.MouseEvent) => {
+    if (selectedTool === "move" && selectedCells.length > 0) {
+      handleTransform("move", index);
+      onToolChange("select");
+      return;
+    }
+
+    if ((selectedTool === "rotateLeft90" || selectedTool === "rotateRight90") && selectedCells.length > 0) {
+      handleTransform(selectedTool);
+      onToolChange("select");
+      setPreviewPalette(null);
+      return;
+    }
+
+    // Don't allow painting on locked cells
+    if ((selectedTool === "paint" || !selectedTool) && lockedCells.includes(index)) {
+      return;
+    }
+
     if (selectedTool === "rowselect") {
       const rowIndex = Math.floor(index / dimensions.width);
-      handleRowSelect(rowIndex, event);
+      handleRowSelect(rowIndex, e);
       return;
     }
 
     if (selectedTool === "columnselect") {
       const columnIndex = index % dimensions.width;
-      handleColumnSelect(columnIndex, event);
+      handleColumnSelect(columnIndex, e);
       return;
     }
 
@@ -335,6 +426,46 @@ export function PaletteGrid({
         const cellsToLock = getCellsInRope(newPoints);
         setTempLockedCells(cellsToLock);
       }
+    } else if (selectedTool === "move" && selectedCells.length > 0) {
+      // Calculate preview positions similar to paste preview
+      const startRow = Math.floor(selectedCells[0] / dimensions.width);
+      const startCol = selectedCells[0] % dimensions.width;
+      const targetRow = Math.floor(index / dimensions.width);
+      const targetCol = index % dimensions.width;
+      
+      const rowOffset = targetRow - startRow;
+      const colOffset = targetCol - startCol;
+      
+      // Create preview palette
+      const newPalette = [...palette];
+      
+      // First, clear the original selected cells in the preview
+      selectedCells.forEach(cellIndex => {
+        newPalette[cellIndex] = "#ffffff";
+      });
+      
+      // Then show where they would move to
+      selectedCells.forEach(cellIndex => {
+        const cellRow = Math.floor(cellIndex / dimensions.width);
+        const cellCol = cellIndex % dimensions.width;
+        const newRow = cellRow + rowOffset;
+        const newCol = cellCol + colOffset;
+        
+        if (
+          newRow >= 0 && 
+          newRow < dimensions.height && 
+          newCol >= 0 && 
+          newCol < dimensions.width
+        ) {
+          const targetIndex = newRow * dimensions.width + newCol;
+          if (!lockedCells.includes(targetIndex)) {
+            newPalette[targetIndex] = palette[cellIndex];
+          }
+        }
+      });
+      
+      setPreviewPalette(newPalette);
+      setTempSelectedCells([]);  // We don't need temp selection for move preview
     }
   };
 
@@ -596,15 +727,19 @@ export function PaletteGrid({
         style={{
           gridTemplateColumns: `repeat(${dimensions.width}, 2rem)`,
         }}
+        onContextMenu={handleContextMenu}
       >
-        {(previewPalette || palette).map((color, index) => (
+        {(rotationPreview || previewPalette || palette).map((color, index) => (
           <button
             key={index}
             onClick={(e) => handleCellClick(index, e)}
             onMouseDown={(e) => handleMouseDown(index, e)}
             onMouseEnter={() => {
-              handleCellHover(index);
-              handleMouseMove(index);
+              if (selectedTool === "move") {
+                handleMouseMove(index);
+              } else if (copiedCells && selectedTool && !["rotateLeft90", "rotateRight90"].includes(selectedTool)) {
+                handleCellHover(index);
+              }
             }}
             onMouseUp={(e) => handleMouseUp(e)}
             onMouseLeave={handleHoverEnd}
