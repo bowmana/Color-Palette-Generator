@@ -326,7 +326,7 @@ export default function Home() {
     const colors = indices.map(index => palette[index]);
     updateState({
       copiedCells: { indices, colors },
-      // Clear existing row/column copy states
+      selectedTool: "paint",
       copiedColumn: null,
       copiedRow: null,
     });

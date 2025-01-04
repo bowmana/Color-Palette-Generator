@@ -133,7 +133,7 @@ export function PaletteGrid({
       return;
     }
 
-    if (copiedCells && (selectedTool === "multiselect" || selectedTool === "boxselect" || selectedTool === "ropeselect")) {
+    if (copiedCells) {
       onPasteCells?.(index);
       return;
     }
