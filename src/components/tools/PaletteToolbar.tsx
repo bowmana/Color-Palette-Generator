@@ -1,4 +1,4 @@
-import { AppState } from "@/app/page";
+import { AppState } from "@/app/types";
 import { useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
@@ -41,7 +41,7 @@ interface ToolGroup {
   }[];
 }
 
-export interface ColorPickerProps {
+export interface PaletteToolbarProps {
   color: string;
   onChange: (color: string) => void;
   selectedTool: Tool;
@@ -54,7 +54,7 @@ export interface ColorPickerProps {
   handleTransform: (transformType: string) => void;
 }
 
-export function ColorPicker({ 
+export function PaletteToolbar({ 
   color, 
   onChange, 
   selectedTool, 
@@ -65,7 +65,7 @@ export function ColorPicker({
   selectedCells,
   lockedCells,
   handleTransform 
-}: ColorPickerProps) {
+}: PaletteToolbarProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const toolGroups: ToolGroup[] = [

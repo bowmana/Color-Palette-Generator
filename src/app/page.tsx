@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { AppState, Tool, Direction, Dimensions } from "@/app/types";
-import { ColorPicker } from "@/components/tools/ColorPicker";
+import { PaletteToolbar } from "@/components/tools/PaletteToolbar";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
 import { GridControls } from "@/components/GridControls/GridControls";
@@ -542,7 +542,7 @@ export default function Home() {
 
             <div className="flex gap-8">
               <div className="w-64">
-                <ColorPicker
+                <PaletteToolbar
                   color={selectedColor}
                   onChange={(color) => updateState({ selectedColor: color })}
                   selectedTool={currentTool}
