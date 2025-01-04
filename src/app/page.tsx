@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { ColorPicker, Tool } from "@/components/ColorPicker/ColorPicker";
+import { ColorPicker, Tool } from "@/components/tools/ColorPicker";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
 import { GridControls } from "@/components/GridControls/GridControls";
+
 import {
   reshapeGrid,
   popGridSection,
@@ -14,7 +15,7 @@ import {
 import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
 import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";
-import { useHistory } from "@/utils/useHistory";
+import { useHistory } from "@/app/hooks/useHistory";
 
 interface PaletteGridProps {
   setPalette?: (newPalette: string[]) => void;

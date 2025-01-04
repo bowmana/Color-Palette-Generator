@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Tool } from "../ColorPicker/ColorPicker";
 import { AppState } from "../../app/page";
+import { ColumnControls } from "./ColumnControls";
+import { RowControls } from "./RowControls";
+import { SelectionActionsBar } from "./SelectionActionsBar";
+import { GridCells } from "./GridCells";
 
 interface PaletteGridProps {
   dimensions: { width: number; height: number };
@@ -34,37 +38,39 @@ interface PaletteGridProps {
   onToolChange: (tool: Tool | null) => void;
 }
 
-export function PaletteGrid({
-  dimensions,
-  selectedColor,
-  selectedTool,
-  palette,
-  onCellClick,
-  handleTransform,
-  onColumnClear,
-  onRowClear,
-  onColumnCopy,
-  onColumnPaste,
-  onRowCopy,
-  onRowPaste,
-  copiedColumn,
-  copiedRow,
-  onColumnRemove,
-  onRowRemove,
-  selectedCell,
-  selectedCells,
-  onRowSelect,
-  onColumnSelect,
-  setPalette,
-  setSelectedCell,
-  setSelectedCells,
-  onCopyCells,
-  onPasteCells,
-  copiedCells,
-  updateState,
-  lockedCells,
-  onToolChange,
-}: PaletteGridProps) {
+export function PaletteGrid(props: PaletteGridProps) {
+  const {
+    dimensions,
+    selectedColor,
+    selectedTool,
+    palette,
+    onCellClick,
+    handleTransform,
+    onColumnClear,
+    onRowClear,
+    onColumnCopy,
+    onColumnPaste,
+    onRowCopy,
+    onRowPaste,
+    copiedColumn,
+    copiedRow,
+    onColumnRemove,
+    onRowRemove,
+    selectedCell,
+    selectedCells,
+    onRowSelect,
+    onColumnSelect,
+    setPalette,
+    setSelectedCell,
+    setSelectedCells,
+    onCopyCells,
+    onPasteCells,
+    copiedCells,
+    updateState,
+    lockedCells,
+    onToolChange,
+  } = props;
+
   const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
   const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
@@ -75,7 +81,6 @@ export function PaletteGrid({
   const [tempLockedCells, setTempLockedCells] = useState<number[]>([]);
   const [rotationPreview, setRotationPreview] = useState<string[] | null>(null);
 
-  // Add useEffect for escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && copiedCells) {
@@ -88,7 +93,6 @@ export function PaletteGrid({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [copiedCells, updateState]);
 
-  // Add right click handler
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     if (copiedCells) {
@@ -97,7 +101,6 @@ export function PaletteGrid({
     }
   };
 
-  // Add useEffect for escape key handling
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && (selectedTool === "rotateLeft90" || selectedTool === "rotateRight90")) {
@@ -110,17 +113,14 @@ export function PaletteGrid({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedTool, onToolChange]);
 
-  // Add useEffect to show rotation preview immediately
   useEffect(() => {
     if (selectedTool && ["rotateLeft90", "rotateRight90"].includes(selectedTool) && selectedCells.length > 0) {
       const newPalette = [...palette];
       
-      // Clear original cells in preview
       selectedCells.forEach(cellIndex => {
         newPalette[cellIndex] = "#ffffff";
       });
       
-      // Show rotated positions
       selectedCells.forEach(cellIndex => {
         const row = Math.floor(cellIndex / dimensions.width);
         const col = cellIndex % dimensions.width;
@@ -157,7 +157,6 @@ export function PaletteGrid({
       return;
     }
 
-    // Don't allow painting on locked cells
     if ((selectedTool === "paint" || !selectedTool) && lockedCells.includes(index)) {
       return;
     }
@@ -238,7 +237,6 @@ export function PaletteGrid({
       return;
     }
 
-    // Create preview palette
     const newPalette = [...palette];
     for (let row = 0; row < dimensions.height; row++) {
       const sourceIndex = row * dimensions.width + copiedColumn;
@@ -254,7 +252,6 @@ export function PaletteGrid({
       return;
     }
 
-    // Create preview palette
     const newPalette = [...palette];
     for (let col = 0; col < dimensions.width; col++) {
       const sourceIndex = copiedRow * dimensions.width + col;
@@ -274,11 +271,9 @@ export function PaletteGrid({
       return;
     }
 
-    // Create preview palette
     const newPalette = [...palette];
     const { indices, colors } = copiedCells;
     
-    // Calculate relative positions (same logic as in handlePasteCells)
     const startRow = Math.floor(indices[0] / dimensions.width);
     const startCol = indices[0] % dimensions.width;
     const targetRow = Math.floor(index / dimensions.width);
@@ -303,7 +298,6 @@ export function PaletteGrid({
     setPreviewPalette(newPalette);
   };
 
-  // Helper functions to check if selected cells form a row or column
   const isSelectedRow = (cells: number[], width: number): number | null => {
     if (cells.length !== width) return null;
     const rowIndex = Math.floor(cells[0] / width);
@@ -349,7 +343,6 @@ export function PaletteGrid({
       const endRow = Math.floor(end / dimensions.width);
       const endCol = end % dimensions.width;
       
-      // Bresenham's line algorithm
       let x = startCol;
       let y = startRow;
       const dx = Math.abs(endCol - startCol);
@@ -427,7 +420,6 @@ export function PaletteGrid({
         setTempLockedCells(cellsToLock);
       }
     } else if (selectedTool === "move" && selectedCells.length > 0) {
-      // Calculate preview positions similar to paste preview
       const startRow = Math.floor(selectedCells[0] / dimensions.width);
       const startCol = selectedCells[0] % dimensions.width;
       const targetRow = Math.floor(index / dimensions.width);
@@ -436,15 +428,12 @@ export function PaletteGrid({
       const rowOffset = targetRow - startRow;
       const colOffset = targetCol - startCol;
       
-      // Create preview palette
       const newPalette = [...palette];
       
-      // First, clear the original selected cells in the preview
       selectedCells.forEach(cellIndex => {
         newPalette[cellIndex] = "#ffffff";
       });
       
-      // Then show where they would move to
       selectedCells.forEach(cellIndex => {
         const cellRow = Math.floor(cellIndex / dimensions.width);
         const cellCol = cellIndex % dimensions.width;
@@ -465,7 +454,7 @@ export function PaletteGrid({
       });
       
       setPreviewPalette(newPalette);
-      setTempSelectedCells([]);  // We don't need temp selection for move preview
+      setTempSelectedCells([]);
     }
   };
 
@@ -517,15 +506,12 @@ export function PaletteGrid({
       
       updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
     } else if (event?.ctrlKey || event?.metaKey) {
-      // Check if row is already selected
       const isRowSelected = rowCells.every(cell => selectedCells.includes(cell));
       
       if (isRowSelected) {
-        // Remove row from selection
         const newSelection = selectedCells.filter(cell => !rowCells.includes(cell));
         updateState({ selectedCells: newSelection });
       } else {
-        // Add row to selection
         updateState({ selectedCells: [...selectedCells, ...rowCells] });
       }
     } else {
@@ -552,15 +538,12 @@ export function PaletteGrid({
       
       updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
     } else if (event?.ctrlKey || event?.metaKey) {
-      // Check if column is already selected
       const isColumnSelected = columnCells.every(cell => selectedCells.includes(cell));
       
       if (isColumnSelected) {
-        // Remove column from selection
         const newSelection = selectedCells.filter(cell => !columnCells.includes(cell));
         updateState({ selectedCells: newSelection });
       } else {
-        // Add column to selection
         updateState({ selectedCells: [...selectedCells, ...columnCells] });
       }
     } else {
@@ -570,234 +553,60 @@ export function PaletteGrid({
 
   return (
     <div className="relative">
-      {/* Selection Actions Bar */}
-      {selectedCells.length > 0 && (
-        <div className="absolute -top-16 left-0 right-0 bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="text-sm text-gray-600">
-            {selectedCells.length} cell{selectedCells.length > 1 ? 's' : ''} selected
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (selectedCells.length === 0) return;
-                
-                // Always use the new copyCells system regardless of selection type
-                onCopyCells?.(selectedCells);
-              }}
-              className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg flex items-center gap-2 text-sm"
-              title="Copy"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
-              <span>Copy</span>
-            </button>
-            <button
-              onClick={() => {
-                // Clear selected cells
-                const newPalette = [...palette];
-                selectedCells.forEach(index => {
-                  newPalette[index] = "#ffffff";
-                });
-                setPalette?.(newPalette);
-              }}
-              className="p-2 hover:bg-red-50 text-red-600 rounded-lg flex items-center gap-2 text-sm"
-              title="Clear"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span>Clear</span>
-            </button>
-            <button
-              onClick={() => {
-                setSelectedCells([]);
-                setSelectedCell(null);
-              }}
-              className="p-2 hover:bg-gray-100 text-gray-600 rounded-lg flex items-center gap-2 text-sm"
-              title="Clear selection"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-              <span>Clear Selection</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Column Controls */}
-      <div className="absolute -top-8 left-0 right-0 flex">
-        {Array.from({ length: dimensions.width }).map((_, columnIndex) => (
-          <div
-            key={`col-controls-${columnIndex}`}
-            className="flex-1 flex justify-center"
-            onMouseEnter={() => copiedColumn !== null && handleColumnHover(columnIndex)}
-            onMouseLeave={handleHoverEnd}
-          >
-            <button
-              onClick={(e) => handleColumnSelect(columnIndex, e)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Select Column"
-            >
-              <svg
-                className="w-4 h-4 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Row Controls */}
-      <div className="absolute -left-8 top-0 bottom-0">
-        {Array.from({ length: dimensions.height }).map((_, rowIndex) => (
-          <div
-            key={`row-controls-${rowIndex}`}
-            className="flex items-center h-8"
-            onMouseEnter={() => copiedRow !== null && handleRowHover(rowIndex)}
-            onMouseLeave={handleHoverEnd}
-            style={{ height: '2rem' }}
-          >
-            <button
-              onClick={(e) => handleRowSelect(rowIndex, e)}
-              className="p-1 hover:bg-gray-100 rounded"
-              title="Select Row"
-            >
-              <svg
-                className="w-4 h-4 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Grid */}
-      <div
-        className="grid gap-0.5 border border-gray-200 p-0.5 rounded mt-1"
-        style={{
-          gridTemplateColumns: `repeat(${dimensions.width}, 2rem)`,
+      <SelectionActionsBar
+        selectedCellsCount={props.selectedCells.length}
+        onCopy={() => {
+          if (props.selectedCells.length === 0) return;
+          props.onCopyCells?.(props.selectedCells);
         }}
-        onContextMenu={handleContextMenu}
-      >
-        {(rotationPreview || previewPalette || palette).map((color, index) => (
-          <button
-            key={index}
-            onClick={(e) => handleCellClick(index, e)}
-            onMouseDown={(e) => handleMouseDown(index, e)}
-            onMouseEnter={() => {
-              if (selectedTool === "move") {
-                handleMouseMove(index);
-              } else if (copiedCells && selectedTool && !["rotateLeft90", "rotateRight90"].includes(selectedTool)) {
-                handleCellHover(index);
-              }
-            }}
-            onMouseUp={(e) => handleMouseUp(e)}
-            onMouseLeave={handleHoverEnd}
-            className={`aspect-square ${
-              selectedTool === "paint"
-                ? "hover:ring-2 hover:ring-blue-500"
-                : copiedCells 
-                  ? "hover:ring-2 hover:ring-green-500"
-                  : "hover:ring-2 hover:ring-yellow-500"
-            } ${
-              (selectedCell === index || selectedCells.includes(index) || 
-               (isSelecting && tempSelectedCells.includes(index)))
-                ? "ring-2 ring-yellow-500" 
-                : ""
-            } ${
-              previewPalette && previewPalette[index] !== palette[index]
-                ? "opacity-70"
-                : ""
-            } ${
-              (lockedCells.includes(index) || 
-               ((selectedTool === "boxlock" || selectedTool === "ropelock") && 
-                tempLockedCells.includes(index)))
-                ? "opacity-50"
-                : ""
-            } focus:outline-none focus:ring-2 focus:ring-blue-500 relative group transition-colors duration-150`}
-            style={{ backgroundColor: previewPalette ? previewPalette[index] : color }}
-          >
-            {(selectedTool === "select" || selectedTool === "multiselect") && color && (
-              <span className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-gray-900 text-white rounded pointer-events-none whitespace-nowrap">
-                {color}
-              </span>
-            )}
-            {(lockedCells.includes(index) || 
-              ((selectedTool === "boxlock" || selectedTool === "ropelock") && 
-               tempLockedCells.includes(index))) && (
-              <div className={`absolute inset-0 flex items-center justify-center bg-black ${
-                tempLockedCells.includes(index) ? "bg-opacity-5" : "bg-opacity-10"
-              }`}>
-                <svg 
-                  className={`w-3 h-3 ${
-                    tempLockedCells.includes(index) ? "text-gray-500" : "text-gray-700"
-                  }`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-                  />
-                </svg>
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
+        onClearCells={() => {
+          const newPalette = [...palette];
+          props.selectedCells.forEach((index) => {
+            newPalette[index] = "#ffffff";
+          });
+          props.setPalette?.(newPalette);
+        }}
+        onClearSelection={() => {
+          props.setSelectedCells([]);
+          props.setSelectedCell(null);
+        }}
+      />
+
+      <ColumnControls
+        width={dimensions.width}
+        copiedColumn={props.copiedColumn}
+        onColumnHover={handleColumnHover}
+        onHoverEnd={handleHoverEnd}
+        onColumnSelect={handleColumnSelect}
+      />
+
+      <RowControls
+        height={dimensions.height}
+        copiedRow={props.copiedRow}
+        onRowHover={handleRowHover}
+        onHoverEnd={handleHoverEnd}
+        onRowSelect={handleRowSelect}
+      />
+
+      <GridCells
+        dimensions={dimensions}
+        palette={palette}
+        previewPalette={previewPalette}
+        rotationPreview={rotationPreview}
+        lockedCells={props.lockedCells}
+        selectedTool={selectedTool}
+        selectedCell={props.selectedCell}
+        selectedCells={props.selectedCells}
+        tempSelectedCells={tempSelectedCells}
+        tempLockedCells={tempLockedCells}
+        handleCellClick={handleCellClick}
+        handleMouseDown={handleMouseDown}
+        handleMouseMove={handleMouseMove}
+        handleMouseUp={handleMouseUp}
+        handleCellHover={handleCellHover}
+        handleHoverEnd={handleHoverEnd}
+        isSelecting={isSelecting}
+      />
     </div>
   );
 }
