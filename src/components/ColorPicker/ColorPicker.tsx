@@ -1,70 +1,23 @@
-import { AppState } from "@/app/page";
 import { useState } from "react";
 import { HexColorPicker } from "react-colorful";
+import {
+  AppState,
+  Tool,
+  ToolGroup,
+  ColorPickerProps,
+} from "@/app/types";
 
-export type Tool = 
-  | "paint" 
-  | "select"
-  | "multiselect" 
-  | "boxselect" 
-  | "ropeselect" 
-  | "lock"
-  | "lockselected"
-  | "unlockselected"
-  | "boxlock" 
-  | "ropelock" 
-  | "lockall" 
-  | "unlockall"
-  | "fillall"
-  | "fillselected"
-  | "fillrow"
-  | "fillcolumn"
-  | "rowselect"
-  | "columnselect"
-  | "transform"
-  | "move"
-  | "rotateLeft90"
-  | "rotateRight90";
-
-interface ToolGroup {
-  name: string;
-  tools: {
-    id: Tool;
-    icon: React.ReactNode;
-    title: string;
-    dropdown?: {
-      id: Tool;
-      key: string;
-      title: string;
-      icon: React.ReactNode;
-    }[];
-  }[];
-}
-
-export interface ColorPickerProps {
-  color: string;
-  onChange: (color: string) => void;
-  selectedTool: Tool;
-  onToolChange: (tool: Tool) => void;
-  updateState: (state: Partial<AppState>) => void;
-  dimensions: { width: number; height: number };
-  palette: string[];
-  selectedCells: number[];
-  lockedCells: number[];
-  handleTransform: (transformType: string) => void;
-}
-
-export function ColorPicker({ 
-  color, 
-  onChange, 
-  selectedTool, 
-  onToolChange, 
-  updateState, 
+export function ColorPicker({
+  color,
+  onChange,
+  selectedTool,
+  onToolChange,
+  updateState,
   dimensions,
   palette,
   selectedCells,
   lockedCells,
-  handleTransform 
+  handleTransform,
 }: ColorPickerProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 

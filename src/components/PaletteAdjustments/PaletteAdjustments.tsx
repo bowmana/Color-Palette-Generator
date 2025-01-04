@@ -1,26 +1,19 @@
 import { useState, useCallback, useEffect } from "react";
 import { TinyColor } from "@ctrl/tinycolor";
+import {
+  PaletteAdjustmentsProps,
+  ColorValues,
+} from "@/app/types";
 
-interface PaletteAdjustmentsProps {
-  palette: string[];
-  onPaletteChange: (newPalette: string[]) => void;
+function getColorValues(color: string): ColorValues {
+  const tinyColor = new TinyColor(color);
+  const { h, s, l } = tinyColor.toHsl();
+  return {
+    h,
+    s: s * 100, // Convert to percentage
+    l: l * 100, // Convert to percentage
+  };
 }
-
-interface ColorValues {
-  h: number;
-  s: number;
-  l: number;
-}
-
-const getColorValues = (hex: string): ColorValues => {
-  console.log(hex);
-
-  const color = new TinyColor(hex);
-  console.log(color);
-
-  const { h, s, l } = color.toHsl();
-  return { h, s, l };
-};
 
 export function PaletteAdjustments({
   palette,

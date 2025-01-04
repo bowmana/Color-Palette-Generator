@@ -1,10 +1,9 @@
-export type Direction = "top" | "bottom" | "left" | "right";
-export type Layout = "horizontal" | "vertical" | "square";
+import { Direction, Layout, Dimensions } from "@/app/types";
 
 export function reshapeGrid(
   colors: string[],
-  oldDimensions: { width: number; height: number },
-  newDimensions: { width: number; height: number }
+  oldDimensions: Dimensions,
+  newDimensions: Dimensions
 ): string[] {
   const newGrid: string[] = [];
 
@@ -31,11 +30,11 @@ export function reshapeGrid(
 
 export function popGridSection(
   colors: string[],
-  dimensions: { width: number; height: number },
+  dimensions: Dimensions,
   direction: Direction
 ): {
   newColors: string[];
-  newDimensions: { width: number; height: number };
+  newDimensions: Dimensions;
 } {
   let newWidth = dimensions.width;
   let newHeight = dimensions.height;

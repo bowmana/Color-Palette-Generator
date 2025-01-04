@@ -1,9 +1,9 @@
-import { Direction } from "@/utils/GridOperations";
+import { Direction, Layout, Dimensions } from "@/app/types";
 
 interface GridControlsProps {
   onPop: (direction: Direction) => void;
-  onTransform: (layout: "horizontal" | "vertical" | "square") => void;
-  dimensions: { width: number; height: number };
+  onTransform: (layout: Layout) => void;
+  dimensions: Dimensions;
 }
 
 export function GridControls({

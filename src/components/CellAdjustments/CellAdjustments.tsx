@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { TinyColor } from "@ctrl/tinycolor";
-
-interface CellAdjustmentsProps {
-  colors: string[];
-  onColorChange: (newColor: string) => void;
-}
+import { CellAdjustmentsProps } from "@/app/types";
 
 export function CellAdjustments({ colors, onColorChange }: CellAdjustmentsProps) {
   const [adjustments, setAdjustments] = useState({

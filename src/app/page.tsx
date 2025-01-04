@@ -1,42 +1,20 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { ColorPicker, Tool } from "@/components/tools/ColorPicker";
+import { AppState, Tool, Direction, Dimensions } from "@/app/types";
+import { ColorPicker } from "@/components/tools/ColorPicker";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
 import { GridControls } from "@/components/GridControls/GridControls";
-
 import {
   reshapeGrid,
   popGridSection,
-  Direction,
   transformGridLayout,
-} from "@/utils/GridOperations";
+} from "@/components/GridControls/GridOperations";
 import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
 import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";
 import { useHistory } from "@/app/hooks/useHistory";
-
-interface PaletteGridProps {
-  setPalette?: (newPalette: string[]) => void;
-  onSelectionClear?: () => void;
-  updateState: (updates: Partial<AppState>) => void;
-  handleTransform: (transformType: string, targetIndex?: number) => void;
-  onToolChange: (tool: Tool | null) => void;
-}
-
-export interface AppState {
-  dimensions: { width: number; height: number };
-  palette: string[];
-  selectedColor: string;
-  selectedTool: Tool;
-  selectedCell: number | null;
-  selectedCells: number[];
-  copiedCells: { indices: number[]; colors: string[] } | null;
-  copiedColumn: number | null;
-  copiedRow: number | null;
-  lockedCells: number[];
-}
 
 export default function Home() {
   const {

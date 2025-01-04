@@ -1,42 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Tool } from "../ColorPicker/ColorPicker";
-import { AppState } from "../../app/page";
+import { Tool, AppState, PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
 import { GridCells } from "./GridCells";
-
-interface PaletteGridProps {
-  dimensions: { width: number; height: number };
-  selectedColor: string;
-  selectedTool: Tool | null;
-  palette: string[];
-  onCellClick: (index: number) => void;
-  handleTransform: (transformType: string, targetIndex?: number) => void;
-  onColumnClear?: (columnIndex: number) => void;
-  onRowClear?: (rowIndex: number) => void;
-  onColumnCopy?: (columnIndex: number) => void;
-  onColumnPaste?: (columnIndex: number) => void;
-  onRowCopy?: (rowIndex: number) => void;
-  onRowPaste?: (rowIndex: number) => void;
-  copiedColumn: number | null;
-  copiedRow: number | null;
-  onColumnRemove?: (columnIndex: number) => void;
-  onRowRemove?: (rowIndex: number) => void;
-  selectedCell: number | null;
-  selectedCells: number[];
-  onRowSelect: (rowIndex: number) => void;
-  onColumnSelect: (columnIndex: number) => void;
-  setPalette?: (newPalette: string[]) => void;
-  setSelectedCell: (cell: number | null) => void;
-  setSelectedCells: (cells: number[]) => void;
-  onCopyCells?: (indices: number[]) => void;
-  onPasteCells?: (targetIndex: number) => void;
-  copiedCells?: { indices: number[], colors: string[] } | null;
-  updateState: (updates: Partial<AppState>) => void;
-  lockedCells: number[];
-  onToolChange: (tool: Tool | null) => void;
-}
 
 export function PaletteGrid(props: PaletteGridProps) {
   const {

@@ -1,80 +1,50 @@
 import { useRef } from "react";
-
-interface ExamplePalette {
-  name: string;
-  dimensions: { width: number; height: number };
-  colors: string[];
-}
-
-interface PaletteExamplesProps {
-  onCopyPalette: (
-    colors: string[],
-    dimensions: { width: number; height: number }
-  ) => void;
-}
+import { ExamplePalette, PaletteExamplesProps } from "@/app/types";
 
 const EXAMPLE_PALETTES: ExamplePalette[] = [
   {
     name: "Sunset Gradient",
-    dimensions: { width: 8, height: 1 },
+    dimensions: { width: 4, height: 4 },
     colors: [
-      "#FF6B6B",
-      "#FF8E72",
-      "#FFB88C",
-      "#FFD8A8",
-      "#FFF3E0",
-      "#FFE0B2",
-      "#FFCC80",
-      "#FFA726",
+      "#FF6B6B", "#FF8E72", "#FFA07A", "#FFB88C",
+      "#FF9E9E", "#FFA785", "#FFB494", "#FFC5A3",
+      "#FFD1D1", "#FFC0A8", "#FFD1B8", "#FFD8C4",
+      "#FFE9E9", "#FFD8CB", "#FFE4D6", "#FFF0E6"
     ],
   },
   {
     name: "Ocean Blues",
-    dimensions: { width: 4, height: 2 },
+    dimensions: { width: 4, height: 4 },
     colors: [
-      "#E3F2FD",
-      "#90CAF9",
-      "#42A5F5",
-      "#1E88E5",
-      "#1565C0",
-      "#0D47A1",
-      "#01579B",
-      "#014377",
-    ],
-  },
-  {
-    name: "Forest Greens",
-    dimensions: { width: 2, height: 4 },
-    colors: [
-      "#E8F5E9",
-      "#A5D6A7",
-      "#66BB6A",
-      "#43A047",
-      "#2E7D32",
-      "#1B5E20",
-      "#004D40",
-      "#00251A",
+      "#001F3F", "#083358", "#0F4C81", "#1665AA",
+      "#003366", "#0A4A7F", "#1162A8", "#1D7FD1",
+      "#004D99", "#0C61A6", "#1379CF", "#24A6F8",
+      "#0066CC", "#0E78CD", "#158AF6", "#2BBFFF"
     ],
   },
 ];
 
-// Add more example palettes
 const MORE_EXAMPLE_PALETTES: ExamplePalette[] = [
   {
-    name: "Autumn Warmth",
-    dimensions: { width: 4, height: 2 },
+    name: "Forest Greens",
+    dimensions: { width: 4, height: 4 },
     colors: [
-      "#D84315",
-      "#F4511E",
-      "#FF7043",
-      "#FF8A65",
-      "#795548",
-      "#8D6E63",
-      "#A1887F",
-      "#BCAAA4",
+      "#1B4332", "#2D6A4F", "#40916C", "#52B788",
+      "#2D5A27", "#3E8948", "#4FA660", "#74C69D",
+      "#3F7119", "#50943A", "#61B75B", "#95D5B2",
+      "#518B1C", "#62AF2F", "#73D34D", "#B7E4C7"
     ],
   },
-  // Add more examples here...
+  {
+    name: "Desert Sands",
+    dimensions: { width: 4, height: 4 },
+    colors: [
+      "#C2B280", "#D4C292", "#E6D2A4", "#F8E2B6",
+      "#B1A374", "#C3B486", "#D5C598", "#E7D6AA",
+      "#A09468", "#B2A57A", "#C4B68C", "#D6C79E",
+      "#8F8558", "#A1966A", "#B3A77C", "#C5B88E"
+    ],
+  },
 ];
 
 export function PaletteExamples({ onCopyPalette }: PaletteExamplesProps) {

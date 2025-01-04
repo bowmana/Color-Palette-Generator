@@ -1,12 +1,5 @@
 import React from "react";
-
-interface ColumnControlsProps {
-  width: number;
-  copiedColumn: number | null;
-  onColumnHover: (columnIndex: number) => void;
-  onHoverEnd: () => void;
-  onColumnSelect: (columnIndex: number, event?: React.MouseEvent) => void;
-}
+import { ColumnControlsProps } from "@/app/types";
 
 export function ColumnControls({
   width,

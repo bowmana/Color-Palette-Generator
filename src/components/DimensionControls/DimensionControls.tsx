@@ -1,17 +1,11 @@
-interface DimensionControlsProps {
-  dimensions: { width: number; height: number };
-  onDimensionsChange: (dimensions: { width: number; height: number }) => void;
-}
+import { DimensionControlsProps, Dimensions } from "@/app/types";
 
 const PRESET_TOTAL_CELLS = [
-  { name: "4 cells", total: 4 },
-  { name: "8 cells", total: 8 },
   { name: "16 cells", total: 16 },
   { name: "32 cells", total: 32 },
   { name: "64 cells", total: 64 },
   { name: "128 cells", total: 128 },
   { name: "256 cells", total: 256 },
-  { name: "512 cells", total: 512 },
 ] as const;
 
 export function DimensionControls({
