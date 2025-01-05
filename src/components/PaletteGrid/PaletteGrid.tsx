@@ -156,16 +156,14 @@ export function PaletteGrid({
 
   function handleMouseMove(index: number) {
     if (selectedTool === "boxselect" && isSelecting && selectionStart !== null) {
-      const newSelection = getCellsInBox(selectionStart, index, dimensions);
-      setTempSelectedCells(newSelection);
+      setTempSelectedCells(getCellsInBox(selectionStart, index, dimensions));
       return;
     }
     if (selectedTool === "ropeselect" && ropePoints.length > 0) {
       if (ropePoints[ropePoints.length - 1] !== index) {
         const newPoints = [...ropePoints, index];
         setRopePoints(newPoints);
-        const newSelection = getCellsInRope(newPoints, dimensions);
-        setTempSelectedCells(newSelection);
+        setTempSelectedCells(getCellsInRope(newPoints, dimensions));
       }
       return;
     }
@@ -177,15 +175,14 @@ export function PaletteGrid({
       const rowOffset = targetRow - startRow;
       const colOffset = targetCol - startCol;
 
-      const newPalette = getMovedPalette(
+      setPreviewPalette(getMovedPalette(
         palette,
         selectedCells,
         dimensions,
         rowOffset,
         colOffset,
         lockedCells
-      );
-      setPreviewPalette(newPalette);
+      ));
       setTempSelectedCells([]);
     }
   }
