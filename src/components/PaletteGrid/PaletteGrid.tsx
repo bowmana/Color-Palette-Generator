@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Tool, AppState, PaletteGridProps } from "@/app/types";
+import { PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
@@ -13,24 +13,10 @@ export function PaletteGrid(props: PaletteGridProps) {
     palette,
     onCellClick,
     handleTransform,
-    onColumnClear,
-    onRowClear,
-    onColumnCopy,
-    onColumnPaste,
-    onRowCopy,
-    onRowPaste,
     copiedColumn,
     copiedRow,
-    onColumnRemove,
-    onRowRemove,
     selectedCell,
     selectedCells,
-    onRowSelect,
-    onColumnSelect,
-    setPalette,
-    setSelectedCell,
-    setSelectedCells,
-    onCopyCells,
     onPasteCells,
     copiedCells,
     updateState,
@@ -38,8 +24,6 @@ export function PaletteGrid(props: PaletteGridProps) {
     onToolChange,
   } = props;
 
-  const [showColumnMenu, setShowColumnMenu] = useState<number | null>(null);
-  const [showRowMenu, setShowRowMenu] = useState<number | null>(null);
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
