@@ -1,58 +1,9 @@
-import { AppState } from "@/app/types";
+import {  Tool, ToolGroup, PaletteToolbarProps } from "@/app/types";
 import { useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
-export type Tool = 
-  | "paint" 
-  | "select"
-  | "multiselect" 
-  | "boxselect" 
-  | "ropeselect" 
-  | "lock"
-  | "lockselected"
-  | "unlockselected"
-  | "boxlock" 
-  | "ropelock" 
-  | "lockall" 
-  | "unlockall"
-  | "fillall"
-  | "fillselected"
-  | "fillrow"
-  | "fillcolumn"
-  | "rowselect"
-  | "columnselect"
-  | "transform"
-  | "move"
-  | "rotateLeft90"
-  | "rotateRight90";
 
-interface ToolGroup {
-  name: string;
-  tools: {
-    id: Tool;
-    icon: React.ReactNode;
-    title: string;
-    dropdown?: {
-      id: Tool;
-      key: string;
-      title: string;
-      icon: React.ReactNode;
-    }[];
-  }[];
-}
 
-export interface PaletteToolbarProps {
-  color: string;
-  onChange: (color: string) => void;
-  selectedTool: Tool;
-  onToolChange: (tool: Tool) => void;
-  updateState: (state: Partial<AppState>) => void;
-  dimensions: { width: number; height: number };
-  palette: string[];
-  selectedCells: number[];
-  lockedCells: number[];
-  handleTransform: (transformType: string) => void;
-}
 
 export function PaletteToolbar({ 
   color, 

@@ -1,11 +1,5 @@
 import React from "react";
-
-interface SelectionActionsBarProps {
-  selectedCellsCount: number;
-  onCopy: () => void;
-  onClearCells: () => void;
-  onClearSelection: () => void;
-}
+import { SelectionActionsBarProps } from "@/app/types";
 
 export function SelectionActionsBar({
   selectedCellsCount,

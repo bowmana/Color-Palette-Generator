@@ -1,12 +1,5 @@
 import React from "react";
-
-interface RowControlsProps {
-  height: number;
-  copiedRow: number | null;
-  onRowHover: (rowIndex: number) => void;
-  onHoverEnd: () => void;
-  onRowSelect: (rowIndex: number, event?: React.MouseEvent) => void;
-}
+import { RowControlsProps } from "@/app/types";
 
 export function RowControls({
   height,

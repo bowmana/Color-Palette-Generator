@@ -1,25 +1,5 @@
 import React from "react";
-
-interface GridCellsProps {
-  dimensions: { width: number; height: number };
-  palette: string[];
-  previewPalette?: string[] | null;
-  rotationPreview?: string[] | null;
-  lockedCells: number[];
-  selectedTool: string | null;
-  selectedCell: number | null;
-  selectedCells: number[];
-  tempSelectedCells: number[];
-  tempLockedCells: number[];
-  handleCellClick: (index: number, e: React.MouseEvent) => void;
-  handleMouseDown: (index: number, e: React.MouseEvent) => void;
-  handleMouseMove: (index: number) => void;
-  handleMouseUp: (e: React.MouseEvent) => void;
-  handleCellHover: (index: number) => void;
-  handleHoverEnd: () => void;
-  isSelecting: boolean;
-}
-
+import { GridCellsProps } from "@/app/types";
 export function GridCells({
   dimensions,
   palette,

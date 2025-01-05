@@ -2,15 +2,14 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { AppState, Tool, Direction, Dimensions } from "@/app/types";
-import { PaletteToolbar } from "@/components/tools/PaletteToolbar";
+import { PaletteToolbar } from "@/components/ToolBar/PaletteToolbar";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
 import { GridControls } from "@/components/GridControls/GridControls";
 import {
   reshapeGrid,
-  popGridSection,
-  transformGridLayout,
-} from "@/components/GridControls/GridOperations";
+  popGridSection
+} from "@/utils/gridHandlers";
 import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
 import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";

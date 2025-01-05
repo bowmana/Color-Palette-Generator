@@ -87,6 +87,42 @@ export interface ColorPickerProps {
   handleTransform: (transformType: string) => void;
 }
 
+
+export interface SelectionActionsBarProps {
+  selectedCellsCount: number;
+  onCopy: () => void;
+  onClearCells: () => void;
+  onClearSelection: () => void;
+}
+
+export interface RowControlsProps {
+  height: number;
+  copiedRow: number | null;
+  onRowHover: (rowIndex: number) => void;
+  onHoverEnd: () => void;
+  onRowSelect: (rowIndex: number, event?: React.MouseEvent) => void;
+}
+export 
+interface GridCellsProps {
+  dimensions: { width: number; height: number };
+  palette: string[];
+  previewPalette?: string[] | null;
+  rotationPreview?: string[] | null;
+  lockedCells: number[];
+  selectedTool: string | null;
+  selectedCell: number | null;
+  selectedCells: number[];
+  tempSelectedCells: number[];
+  tempLockedCells: number[];
+  handleCellClick: (index: number, e: React.MouseEvent) => void;
+  handleMouseDown: (index: number, e: React.MouseEvent) => void;
+  handleMouseMove: (index: number) => void;
+  handleMouseUp: (e: React.MouseEvent) => void;
+  handleCellHover: (index: number) => void;
+  handleHoverEnd: () => void;
+  isSelecting: boolean;
+}
+
 // ExamplePalette interface
 export interface ExamplePalette {
   name: string;
