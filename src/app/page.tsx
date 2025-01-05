@@ -586,6 +586,7 @@ export default function Home() {
                   lockedCells={lockedCells}
                   handleTransform={handleTransform}
                   onToolChange={setSelectedTool}
+                  setPalette={(newPalette) => updateState({ palette: newPalette })}
                 />
               </div>
             </div>

@@ -5,25 +5,50 @@ import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
 import { GridCells } from "./GridCells";
 
-export function PaletteGrid(props: PaletteGridProps) {
-  const {
-    dimensions,
-    selectedColor,
-    selectedTool,
-    palette,
-    onCellClick,
-    handleTransform,
-    copiedColumn,
-    copiedRow,
-    selectedCell,
-    selectedCells,
-    onPasteCells,
-    copiedCells,
-    updateState,
-    lockedCells,
-    onToolChange,
-  } = props;
-
+export function PaletteGrid({
+  // Grid Config
+  dimensions,
+  palette,
+  lockedCells,
+  
+  // Selection State
+  selectedCell,
+  selectedCells,
+  setSelectedCell,
+  setSelectedCells,
+  
+  // Copy/Paste State
+  copiedCells,
+  copiedColumn,
+  copiedRow,
+  onCopyCells,
+  onPasteCells,
+  
+  // Tool State
+  selectedColor,
+  selectedTool,
+  onToolChange,
+  
+  // Transform Operations
+  handleTransform,
+  
+  // Grid Operations
+  onColumnClear,
+  onRowClear,
+  onColumnCopy,
+  onColumnPaste,
+  onRowCopy,
+  onRowPaste,
+  onColumnRemove,
+  onRowRemove,
+  setPalette,
+  
+  // State Management
+  updateState,
+  
+  // Other
+  onCellClick,
+}: PaletteGridProps) {
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -505,27 +530,27 @@ export function PaletteGrid(props: PaletteGridProps) {
   return (
     <div className="relative">
       <SelectionActionsBar
-        selectedCellsCount={props.selectedCells.length}
+        selectedCellsCount={selectedCells.length}
         onCopy={() => {
-          if (props.selectedCells.length === 0) return;
-          props.onCopyCells?.(props.selectedCells);
+          if (selectedCells.length === 0) return;
+          onCopyCells?.(selectedCells);
         }}
         onClearCells={() => {
           const newPalette = [...palette];
-          props.selectedCells.forEach((index) => {
+          selectedCells.forEach((index) => {
             newPalette[index] = "#ffffff";
           });
-          props.setPalette?.(newPalette);
+          setPalette?.(newPalette);
         }}
         onClearSelection={() => {
-          props.setSelectedCells([]);
-          props.setSelectedCell(null);
+          setSelectedCells([]);
+          setSelectedCell(null);
         }}
       />
 
       <ColumnControls
         width={dimensions.width}
-        copiedColumn={props.copiedColumn}
+        copiedColumn={copiedColumn}
         onColumnHover={handleColumnHover}
         onHoverEnd={handleHoverEnd}
         onColumnSelect={handleColumnSelect}
@@ -533,7 +558,7 @@ export function PaletteGrid(props: PaletteGridProps) {
 
       <RowControls
         height={dimensions.height}
-        copiedRow={props.copiedRow}
+        copiedRow={copiedRow}
         onRowHover={handleRowHover}
         onHoverEnd={handleHoverEnd}
         onRowSelect={handleRowSelect}
@@ -544,10 +569,10 @@ export function PaletteGrid(props: PaletteGridProps) {
         palette={palette}
         previewPalette={previewPalette}
         rotationPreview={rotationPreview}
-        lockedCells={props.lockedCells}
+        lockedCells={lockedCells}
         selectedTool={selectedTool}
-        selectedCell={props.selectedCell}
-        selectedCells={props.selectedCells}
+        selectedCell={selectedCell}
+        selectedCells={selectedCells}
         tempSelectedCells={tempSelectedCells}
         tempLockedCells={tempLockedCells}
         handleCellClick={handleCellClick}

@@ -45,6 +45,18 @@ export interface AppState {
   lockedCells: number[];
 }
 
+export interface PaletteToolbarProps {
+  color: string;
+  onChange: (color: string) => void;
+  selectedTool: Tool;
+  onToolChange: (tool: Tool) => void;
+  updateState: (state: Partial<AppState>) => void;
+  dimensions: { width: number; height: number };
+  palette: string[];
+  selectedCells: number[];
+  lockedCells: number[];
+  handleTransform: (transformType: string) => void;
+}
 // ToolGroup interface
 export interface ToolGroup {
   name: string;
@@ -146,35 +158,70 @@ export interface GridControlsProps {
   dimensions: Dimensions;
 }
 
-// Add PaletteGridProps interface
-export interface PaletteGridProps {
+// Basic grid configuration
+interface GridConfig {
   dimensions: Dimensions;
-  selectedColor: string;
-  selectedTool: Tool | null;
   palette: string[];
-  onCellClick: (index: number) => void;
-  handleTransform: (transformType: string, targetIndex?: number) => void;
-  onColumnClear?: (columnIndex: number) => void;
-  onRowClear?: (rowIndex: number) => void;
-  onColumnCopy?: (columnIndex: number) => void;
-  onColumnPaste?: (columnIndex: number) => void;
-  onRowCopy?: (rowIndex: number) => void;
-  onRowPaste?: (rowIndex: number) => void;
-  copiedColumn: number | null;
-  copiedRow: number | null;
-  onColumnRemove?: (columnIndex: number) => void;
-  onRowRemove?: (rowIndex: number) => void;
+  lockedCells: number[];
+}
+
+// Selection state and handlers
+interface SelectionState {
   selectedCell: number | null;
   selectedCells: number[];
-  onRowSelect: (rowIndex: number) => void;
-  onColumnSelect: (columnIndex: number) => void;
-  setPalette?: (newPalette: string[]) => void;
   setSelectedCell: (cell: number | null) => void;
   setSelectedCells: (cells: number[]) => void;
+}
+
+// Copy/Paste functionality
+interface CopyPasteState {
+  copiedCells: { indices: number[]; colors: string[] } | null;
+  copiedColumn: number | null;
+  copiedRow: number | null;
   onCopyCells?: (indices: number[]) => void;
   onPasteCells?: (targetIndex: number) => void;
-  copiedCells?: { indices: number[]; colors: string[] } | null;
-  updateState: (updates: Partial<AppState>) => void;
-  lockedCells: number[];
+}
+
+// Tool-related props
+interface ToolState {
+  selectedColor: string;
+  selectedTool: Tool | null;
   onToolChange: (tool: Tool | null) => void;
+}
+
+// Transform operations
+interface TransformOperations {
+  handleTransform: (transformType: string, targetIndex?: number) => void;
+}
+
+// State management
+interface StateManagement {
+  updateState: (updates: Partial<AppState>) => void;
+}
+
+// Grid operations
+interface GridOperations {
+  onColumnClear: (columnIndex: number) => void;
+  onRowClear: (rowIndex: number) => void;
+  onColumnCopy: (columnIndex: number) => void;
+  onColumnPaste: (columnIndex: number) => void;
+  onRowCopy: (rowIndex: number) => void;
+  onRowPaste: (rowIndex: number) => void;
+  onColumnRemove: (columnIndex: number) => void;
+  onRowRemove: (rowIndex: number) => void;
+  onRowSelect: (rowIndex: number, event?: React.MouseEvent) => void;
+  onColumnSelect: (columnIndex: number, event?: React.MouseEvent) => void;
+  setPalette?: (newPalette: string[]) => void;
+}
+
+// Main PaletteGridProps interface
+export interface PaletteGridProps extends 
+  GridConfig,
+  SelectionState,
+  CopyPasteState,
+  ToolState,
+  TransformOperations,
+  StateManagement,
+  GridOperations {
+  onCellClick: (index: number) => void;
 }
