@@ -15,6 +15,16 @@ import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
 import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";
 import { useHistory } from "@/app/hooks/useHistory";
+import {
+  clearColumn,
+  clearRow,
+  copyColumn,
+  pasteColumn,
+  copyRow,
+  pasteRow,
+  removeColumn,
+  removeRow,
+} from "@/utils/paletteHandlers";
 
 export default function Home() {
   const {
@@ -272,84 +282,39 @@ export default function Home() {
   };
 
   const handleColumnClear = (columnIndex: number) => {
-    const newPalette = [...palette];
-    for (let row = 0; row < dimensions.height; row++) {
-      const index = row * dimensions.width + columnIndex;
-      newPalette[index] = "#ffffff";
-    }
-    updateState({
-      palette: newPalette,
-    });
+    const newPalette = clearColumn(palette, dimensions, columnIndex);
+    updateState({ palette: newPalette });
   };
 
   const handleRowClear = (rowIndex: number) => {
-    const newPalette = [...palette];
-    for (let col = 0; col < dimensions.width; col++) {
-      const index = rowIndex * dimensions.width + col;
-      newPalette[index] = "#ffffff";
-    }
-    updateState({
-      palette: newPalette,
-    });
+    const newPalette = clearRow(palette, dimensions, rowIndex);
+    updateState({ palette: newPalette });
   };
 
   const handleColumnCopy = (columnIndex: number) => {
-    updateState({
-      copiedColumn: columnIndex,
-      copiedRow: null, // Clear copied row
-    });
+    const { copiedColumn, copiedRow } = copyColumn(columnIndex);
+    updateState({ copiedColumn, copiedRow });
   };
 
   const handleColumnPaste = (columnIndex: number) => {
     if (copiedColumn === null || copiedColumn === columnIndex) return;
-
-    const newPalette = [...palette];
-    for (let row = 0; row < dimensions.height; row++) {
-      const sourceIndex = row * dimensions.width + copiedColumn;
-      const targetIndex = row * dimensions.width + columnIndex;
-      newPalette[targetIndex] = palette[sourceIndex];
-    }
-    updateState({
-      palette: newPalette,
-      copiedColumn: null, // Clear copied column after pasting
-    });
+    const newPalette = pasteColumn(palette, dimensions, copiedColumn, columnIndex);
+    updateState({ palette: newPalette, copiedColumn: null });
   };
 
   const handleRowCopy = (rowIndex: number) => {
-    updateState({
-      copiedRow: rowIndex,
-      copiedColumn: null, // Clear copied column
-    });
+    const { copiedRow, copiedColumn } = copyRow(rowIndex);
+    updateState({ copiedRow, copiedColumn });
   };
 
   const handleRowPaste = (rowIndex: number) => {
     if (copiedRow === null || copiedRow === rowIndex) return;
-
-    const newPalette = [...palette];
-    for (let col = 0; col < dimensions.width; col++) {
-      const sourceIndex = copiedRow * dimensions.width + col;
-      const targetIndex = rowIndex * dimensions.width + col;
-      newPalette[targetIndex] = palette[sourceIndex];
-    }
-    updateState({
-      palette: newPalette,
-      copiedRow: null, // Clear copied row after pasting
-    });
+    const newPalette = pasteRow(palette, dimensions, copiedRow, rowIndex);
+    updateState({ palette: newPalette, copiedRow: null });
   };
 
   const handleColumnRemove = (columnIndex: number) => {
-    const newPalette = [];
-    const newWidth = dimensions.width - 1;
-
-    for (let row = 0; row < dimensions.height; row++) {
-      for (let col = 0; col < dimensions.width; col++) {
-        if (col !== columnIndex) {
-          const index = row * dimensions.width + col;
-          newPalette.push(palette[index]);
-        }
-      }
-    }
-
+    const { newPalette, newWidth } = removeColumn(palette, dimensions, columnIndex);
     updateState({
       dimensions: { ...dimensions, width: newWidth },
       palette: newPalette,
@@ -357,10 +322,7 @@ export default function Home() {
   };
 
   const handleRowRemove = (rowIndex: number) => {
-    const newPalette = palette.filter(
-      (_, index) => Math.floor(index / dimensions.width) !== rowIndex
-    );
-
+    const newPalette = removeRow(palette, dimensions, rowIndex);
     updateState({
       dimensions: { ...dimensions, height: dimensions.height - 1 },
       palette: newPalette,
