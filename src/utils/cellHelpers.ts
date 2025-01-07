@@ -2,10 +2,9 @@ import React from "react";
 import { Dimensions } from "@/app/types";
 
 /**
- * If you need to hover one cell to show a preview of copied cells,
- * pass in everything needed: current palette, the copiedCells object, etc.
+ * Updates the palette to show a preview when hovering over a cell with copied cells.
  */
-export function handleCellHover(
+export function previewCopiedCells(
   index: number,
   copiedCells: { indices: number[]; colors: string[] } | null,
   palette: string[],
@@ -44,12 +43,10 @@ export function handleCellHover(
   setPreviewPalette(newPalette);
 }
 
-
 /**
- * Local wrapper for onCellClick, if needed.
- * You can rename it or remove it, depending on your usage.
+ * Invokes the onCellClick callback with the specified index.
  */
-export function handleCellClick(
+export function invokeCellClick(
   index: number,
   event: React.MouseEvent,
   onCellClick: (index: number) => void

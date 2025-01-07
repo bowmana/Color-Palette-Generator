@@ -2,7 +2,7 @@ import { AppState, Direction, Tool, Dimensions } from "@/app/types";
 import {
   reshapeGrid,
   popGridSection
-} from "@/utils/gridHandlers";
+} from "@/utils/gridHelpers";
 import {
   clearColumn,
   clearRow,
@@ -12,8 +12,8 @@ import {
   pasteRow,
   removeColumn,
   removeRow
-} from "@/utils/paletteHandlers";
-import { getMovedPalette } from "@/utils/transformHandlers";
+} from "@/utils/paletteHelpers";
+import { getMovedPalette } from "@/utils/transformHelpers";
 
 /**
  * A custom hook that bundles a variety of grid-related handlers.

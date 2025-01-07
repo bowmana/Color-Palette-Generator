@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { handleCellHover, handleCellClick } from "@/utils/cellHandlers";
-import { getCellsInBox, getCellsInRope } from "@/utils/selectionHandlers";
-import { getMovedPalette } from "@/utils/transformHandlers";
+import { previewCopiedCells, invokeCellClick } from "@/utils/cellHelpers";
+import { getCellsInBox, getCellsInRope } from "@/utils/selectionHelpers";
+import { getMovedPalette } from "@/utils/transformHelpers";
 import { PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
@@ -113,11 +113,11 @@ export function PaletteGrid({
   }, [selectedTool, selectedCells, dimensions, palette, lockedCells]);
 
   function handleCellHoverLocal(index: number) {
-    handleCellHover(index, copiedCells, palette, dimensions, setPreviewPalette);
+    previewCopiedCells(index, copiedCells, palette, dimensions, setPreviewPalette);
   }
 
   function handleCellClickLocal(index: number, event: React.MouseEvent) {
-    handleCellClick(index, event, onCellClick);
+    invokeCellClick(index, event, onCellClick);
   }
 
   function handleMouseDown(index: number, event: React.MouseEvent) {
