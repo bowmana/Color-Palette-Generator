@@ -27,8 +27,26 @@ export function useGridTransform(
     });
   };
 
+  const handleTransform = (transformType: string, targetIndex?: number) => {
+    // Implement your transform logic here
+    // This should handle different types of transformations based on transformType
+    switch (transformType) {
+      case "flipHorizontal":
+        // Implement flip horizontal
+        break;
+      case "flipVertical":
+        // Implement flip vertical
+        break;
+      case "rotate90":
+        // Implement rotation
+        break;
+      // Add other transform cases
+    }
+  };
+
   return {
     handleGridResize,
     handleGridPop,
+    handleTransform,
   };
 } 
