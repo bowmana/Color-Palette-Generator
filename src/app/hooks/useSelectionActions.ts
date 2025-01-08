@@ -47,10 +47,15 @@ export function useSelectionActions(
     updateState({ palette: newPalette });
   };
 
+  const handleCopyPalette = (newPalette: string[]) => {
+    updateState({ palette: newPalette });
+  };
+
   return {
     handleSelectionCopy,
     handleSelectionPaste,
     handleCellUpdate,
     handleCellsUpdate,
+    handleCopyPalette,
   };
 } 
