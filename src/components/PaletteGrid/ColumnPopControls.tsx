@@ -13,12 +13,11 @@ export function ColumnPopControls({
   onColumnPop,
 }: ColumnPopControlsProps) {
   return (
-    <div className="absolute -right-8 top-0 bottom-0">
+    <div className="absolute -bottom-8 left-0 right-0 flex">
       {Array.from({ length: width }).map((_, columnIndex) => (
         <div
           key={`col-pop-${columnIndex}`}
-          className="flex items-center h-8"
-          style={{ height: "2rem" }}
+          className="flex-1 flex justify-center"
         >
           <button
             onClick={() => onColumnPop(columnIndex)}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { previewCopiedCells, invokeCellClick } from "@/utils/cellHelpers";
-import { getCellsInBox, getCellsInRope } from "@/utils/selectionHelpers";
+import { getCellsInBox, getCellsInRope, handleRowSelect as selectRow, handleColumnSelect as selectColumn } from "@/utils/selectionHelpers";
 import { getMovedPalette } from "@/utils/paletteHelpers";
 import { PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
@@ -221,67 +221,13 @@ export function PaletteGrid({
   }
 
   const handleRowSelect = (rowIndex: number, event?: React.MouseEvent) => {
-    const rowCells = Array.from({ length: dimensions.width }, (_, i) => 
-      rowIndex * dimensions.width + i
-    );
-
-    if (event?.shiftKey && selectedCells.length > 0) {
-      const lastSelectedRow = Math.floor(selectedCells[selectedCells.length - 1] / dimensions.width);
-      const startRow = Math.min(lastSelectedRow, rowIndex);
-      const endRow = Math.max(lastSelectedRow, rowIndex);
-      
-      const newSelection = [];
-      for (let row = startRow; row <= endRow; row++) {
-        for (let col = 0; col < dimensions.width; col++) {
-          newSelection.push(row * dimensions.width + col);
-        }
-      }
-      
-      updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
-    } else if (event?.ctrlKey || event?.metaKey) {
-      const isRowSelected = rowCells.every(cell => selectedCells.includes(cell));
-      
-      if (isRowSelected) {
-        const newSelection = selectedCells.filter(cell => !rowCells.includes(cell));
-        updateState({ selectedCells: newSelection });
-      } else {
-        updateState({ selectedCells: [...selectedCells, ...rowCells] });
-      }
-    } else {
-      updateState({ selectedCells: rowCells });
-    }
+    const newSelection = selectRow(rowIndex, dimensions, selectedCells, event);
+    updateState({ selectedCells: newSelection });
   };
 
   const handleColumnSelect = (columnIndex: number, event?: React.MouseEvent) => {
-    const columnCells = Array.from({ length: dimensions.height }, (_, i) => 
-      i * dimensions.width + columnIndex
-    );
-
-    if (event?.shiftKey && selectedCells.length > 0) {
-      const lastSelectedColumn = selectedCells[selectedCells.length - 1] % dimensions.width;
-      const startCol = Math.min(lastSelectedColumn, columnIndex);
-      const endCol = Math.max(lastSelectedColumn, columnIndex);
-      
-      const newSelection = [];
-      for (let row = 0; row < dimensions.height; row++) {
-        for (let col = startCol; col <= endCol; col++) {
-          newSelection.push(row * dimensions.width + col);
-        }
-      }
-      
-      updateState({ selectedCells: [...new Set([...selectedCells, ...newSelection])] });
-    } else if (event?.ctrlKey || event?.metaKey) {
-      const isColumnSelected = columnCells.every(cell => selectedCells.includes(cell));
-      
-      if (isColumnSelected) {
-        const newSelection = selectedCells.filter(cell => !columnCells.includes(cell));
-        updateState({ selectedCells: newSelection });
-      } else {
-        updateState({ selectedCells: [...selectedCells, ...columnCells] });
-      }
-    } else {
-      updateState({ selectedCells: columnCells });
-    }
+    const newSelection = selectColumn(columnIndex, dimensions, selectedCells, event);
+    updateState({ selectedCells: newSelection });
   };
 
   const handleColumnHover = (columnIndex: number) => {

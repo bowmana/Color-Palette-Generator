@@ -1,61 +1,76 @@
-import { Dimensions, Tool } from "@/app/types";
+import { Dimensions } from "@/app/types";
 
-/**
- * Returns all cell indices within a rectangular box defined by start and end.
- */
+export function getRowCells(rowIndex: number, dimensions: Dimensions): number[] {
+  return Array.from(
+    { length: dimensions.width }, 
+    (_, i) => rowIndex * dimensions.width + i
+  );
+}
+
+export function getColumnCells(columnIndex: number, dimensions: Dimensions): number[] {
+  return Array.from(
+    { length: dimensions.height }, 
+    (_, i) => i * dimensions.width + columnIndex
+  );
+}
+
 export function getCellsInBox(
   startIndex: number,
-  endIndex: number,
+  currentIndex: number,
   dimensions: Dimensions
 ): number[] {
   const startRow = Math.floor(startIndex / dimensions.width);
   const startCol = startIndex % dimensions.width;
-  const endRow = Math.floor(endIndex / dimensions.width);
-  const endCol = endIndex % dimensions.width;
+  const currentRow = Math.floor(currentIndex / dimensions.width);
+  const currentCol = currentIndex % dimensions.width;
 
-  const minRow = Math.min(startRow, endRow);
-  const maxRow = Math.max(startRow, endRow);
-  const minCol = Math.min(startCol, endCol);
-  const maxCol = Math.max(startCol, endCol);
+  const minRow = Math.min(startRow, currentRow);
+  const maxRow = Math.max(startRow, currentRow);
+  const minCol = Math.min(startCol, currentCol);
+  const maxCol = Math.max(startCol, currentCol);
 
-  const cells: number[] = [];
+  const selectedCells: number[] = [];
   for (let row = minRow; row <= maxRow; row++) {
     for (let col = minCol; col <= maxCol; col++) {
-      cells.push(row * dimensions.width + col);
+      selectedCells.push(row * dimensions.width + col);
     }
   }
-  return cells;
+
+  return selectedCells;
 }
 
-/**
- * Returns all cell indices along a "rope" path of points.
- * This uses Bresenham’s line algorithm for each consecutive pair of points.
- */
-export function getCellsInRope(points: number[], dimensions: Dimensions): number[] {
+export function getCellsInRope(
+  points: number[],
+  dimensions: Dimensions
+): number[] {
   if (points.length < 2) return points;
 
-  const cells = new Set<number>();
-
-  for (let i = 1; i < points.length; i++) {
-    const start = points[i - 1];
-    const end = points[i];
-
+  const selectedCells = new Set<number>();
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    const start = points[i];
+    const end = points[i + 1];
+    
     const startRow = Math.floor(start / dimensions.width);
     const startCol = start % dimensions.width;
     const endRow = Math.floor(end / dimensions.width);
     const endCol = end % dimensions.width;
-
-    let x = startCol;
-    let y = startRow;
+    
+    // Bresenham's line algorithm
     const dx = Math.abs(endCol - startCol);
     const dy = Math.abs(endRow - startRow);
     const sx = startCol < endCol ? 1 : -1;
     const sy = startRow < endRow ? 1 : -1;
     let err = dx - dy;
-
+    
+    let x = startCol;
+    let y = startRow;
+    
     while (true) {
-      cells.add(y * dimensions.width + x);
+      selectedCells.add(y * dimensions.width + x);
+      
       if (x === endCol && y === endRow) break;
+      
       const e2 = 2 * err;
       if (e2 > -dy) {
         err -= dy;
@@ -67,46 +82,68 @@ export function getCellsInRope(points: number[], dimensions: Dimensions): number
       }
     }
   }
-
-  return Array.from(cells);
+  
+  return Array.from(selectedCells);
 }
 
 export function handleRowSelect(
   rowIndex: number,
-  dimensions: Dimensions
-): {
-  selectedTool: Tool;
-  selectedCells: number[];
-  selectedCell: null;
-} {
-  const rowCells = Array.from(
-    { length: dimensions.width },
-    (_, colIndex) => rowIndex * dimensions.width + colIndex
-  );
+  dimensions: Dimensions,
+  selectedCells: number[],
+  event?: React.MouseEvent
+): number[] {
+  const rowCells = getRowCells(rowIndex, dimensions);
+
+  if (event?.shiftKey && selectedCells.length > 0) {
+    const lastSelectedRow = Math.floor(selectedCells[selectedCells.length - 1] / dimensions.width);
+    const startRow = Math.min(lastSelectedRow, rowIndex);
+    const endRow = Math.max(lastSelectedRow, rowIndex);
+    
+    const newSelection = [];
+    for (let row = startRow; row <= endRow; row++) {
+      newSelection.push(...getRowCells(row, dimensions));
+    }
+    
+    return [...new Set([...selectedCells, ...newSelection])];
+  } 
   
-  return {
-    selectedTool: "multiselect",
-    selectedCells: rowCells,
-    selectedCell: null,
-  };
+  if (event?.ctrlKey || event?.metaKey) {
+    const isRowSelected = rowCells.every(cell => selectedCells.includes(cell));
+    return isRowSelected
+      ? selectedCells.filter(cell => !rowCells.includes(cell))
+      : [...selectedCells, ...rowCells];
+  }
+  
+  return rowCells;
 }
 
 export function handleColumnSelect(
   columnIndex: number,
-  dimensions: Dimensions
-): {
-  selectedTool: Tool;
-  selectedCells: number[];
-  selectedCell: null;
-} {
-  const columnCells = Array.from(
-    { length: dimensions.height },
-    (_, rowIndex) => rowIndex * dimensions.width + columnIndex
-  );
+  dimensions: Dimensions,
+  selectedCells: number[],
+  event?: React.MouseEvent
+): number[] {
+  const columnCells = getColumnCells(columnIndex, dimensions);
+
+  if (event?.shiftKey && selectedCells.length > 0) {
+    const lastSelectedColumn = selectedCells[selectedCells.length - 1] % dimensions.width;
+    const startCol = Math.min(lastSelectedColumn, columnIndex);
+    const endCol = Math.max(lastSelectedColumn, columnIndex);
+    
+    const newSelection = [];
+    for (let col = startCol; col <= endCol; col++) {
+      newSelection.push(...getColumnCells(col, dimensions));
+    }
+    
+    return [...new Set([...selectedCells, ...newSelection])];
+  }
   
-  return {
-    selectedTool: "multiselect",
-    selectedCells: columnCells,
-    selectedCell: null,
-  };
+  if (event?.ctrlKey || event?.metaKey) {
+    const isColumnSelected = columnCells.every(cell => selectedCells.includes(cell));
+    return isColumnSelected
+      ? selectedCells.filter(cell => !columnCells.includes(cell))
+      : [...selectedCells, ...columnCells];
+  }
+  
+  return columnCells;
 } 

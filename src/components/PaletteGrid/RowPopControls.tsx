@@ -11,11 +11,12 @@ export function RowPopControls({
   onRowPop,
 }: RowPopControlsProps) {
   return (
-    <div className="absolute -bottom-8 left-0 right-0 flex">
+    <div className="absolute -right-8 top-0 bottom-0">
       {Array.from({ length: height }).map((_, rowIndex) => (
         <div
           key={`row-pop-${rowIndex}`}
-          className="flex-1 flex justify-center"
+          className="flex items-center h-8"
+          style={{ height: "2rem" }}
         >
           <button
             onClick={() => onRowPop(rowIndex)}
