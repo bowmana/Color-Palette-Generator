@@ -1,10 +1,6 @@
-import { Direction, Layout, Dimensions } from "@/app/types";
+import {GridControlsProps } from "@/app/types";
 
-interface GridControlsProps {
-  onPop: (direction: Direction) => void;
-  onTransform: (layout: Layout) => void;
-  dimensions: Dimensions;
-}
+
 
 export function GridControls({
   onPop,

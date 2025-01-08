@@ -1,4 +1,4 @@
-import { DimensionControlsProps, Dimensions } from "@/app/types";
+import { DimensionControlsProps } from "@/app/types";
 
 const PRESET_TOTAL_CELLS = [
   { name: "16 cells", total: 16 },

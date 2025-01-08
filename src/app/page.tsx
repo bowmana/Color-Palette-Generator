@@ -10,7 +10,7 @@ import { PaletteExamples } from "@/components/PaletteExamples/PaletteExamples";
 import { PaletteAdjustments } from "@/components/PaletteAdjustments/PaletteAdjustments";
 import { CellAdjustments } from "@/components/CellAdjustments/CellAdjustments";
 import { useHistory } from "@/app/hooks/useHistory";
-import { useGridHandlers } from "@/app/hooks/useGridHandlers";
+import { usePaletteGridState } from "@/app/hooks/usePaletteGridState";
 
 export default function Home() {
   const { state, pushState, undo, redo, canUndo, canRedo } = useHistory<AppState>({
@@ -45,8 +45,8 @@ export default function Home() {
 
   // Bring in our refactored handlers:
   const {
-    handleDimensionsChange,
-    handlePop,
+    handleGridResize,
+    handleGridPop,
     handleColumnClear,
     handleRowClear,
     handleColumnCopy,
@@ -56,12 +56,12 @@ export default function Home() {
     handleColumnRemove,
     handleRowRemove,
     handleTransform,
-    handleCopyCells,
-    handlePasteCells,
+    handleSelectionCopy,
+    handleSelectionPaste,
     handleCopyPalette,
-    handleCellAdjustment,
-    handleMultiCellAdjustment,
-  } = useGridHandlers(state, updateState);
+    handleCellUpdate,
+    handleCellsUpdate,
+  } = usePaletteGridState(state, updateState);
 
   // Optional: Provide real or no-op for rowSelect / colSelect
   const handleRowSelect = (rowIndex: number) => {
@@ -140,13 +140,13 @@ export default function Home() {
             {/* Dimension controls */}
             <DimensionControls
               dimensions={dimensions}
-              onDimensionsChange={handleDimensionsChange}
+              onDimensionsChange={handleGridResize}
             />
 
             {/* Grid controls */}
             <GridControls
               dimensions={dimensions}
-              onPop={handlePop}
+              onPop={handleGridPop}
               onTransform={handleTransform}
             />
 
@@ -199,8 +199,8 @@ export default function Home() {
                   copiedCells={copiedCells}
                   lockedCells={lockedCells}
                   updateState={updateState}
-                  onCopyCells={handleCopyCells}
-                  onPasteCells={handlePasteCells}
+                  onCopyCells={handleSelectionCopy}
+                  onPasteCells={handleSelectionPaste}
                   handleTransform={handleTransform}
                   // This palette setter is from your updateState helper:
                   setPalette={(newPalette) => updateState({ palette: newPalette })}
@@ -221,13 +221,13 @@ export default function Home() {
             {currentTool === "select" && selectedCell !== null && (
               <CellAdjustments
                 colors={[palette[selectedCell]]}
-                onColorChange={(newColor) => handleCellAdjustment(selectedCell, newColor)}
+                onColorChange={(newColor) => handleCellUpdate(selectedCell, newColor)}
               />
             )}
             {currentTool === "multiselect" && selectedCells.length > 0 && (
               <CellAdjustments
                 colors={selectedCells.map((index) => palette[index])}
-                onColorChange={handleMultiCellAdjustment}
+                onColorChange={handleCellsUpdate}
               />
             )}
 

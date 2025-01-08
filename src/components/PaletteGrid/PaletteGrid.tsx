@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { previewCopiedCells, invokeCellClick } from "@/utils/cellHelpers";
 import { getCellsInBox, getCellsInRope } from "@/utils/selectionHelpers";
-import { getMovedPalette } from "@/utils/transformHelpers";
+import { getMovedPalette } from "@/utils/paletteHelpers";
 import { PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";

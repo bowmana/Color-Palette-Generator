@@ -5,6 +5,15 @@ export interface Dimensions {
   width: number;
   height: number;
 }
+export type TransformType =
+  | "shiftup"
+  | "shiftdown"
+  | "shiftleft"
+  | "shiftright"
+  | "rotateLeft90"
+  | "rotate180"
+  | "rotateRight90"
+  | "move";
 
 // Tool type
 export type Tool =

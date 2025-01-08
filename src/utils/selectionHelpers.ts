@@ -1,4 +1,4 @@
-import { Dimensions } from "@/app/types";
+import { Dimensions, Tool } from "@/app/types";
 
 /**
  * Returns all cell indices within a rectangular box defined by start and end.
@@ -69,4 +69,44 @@ export function getCellsInRope(points: number[], dimensions: Dimensions): number
   }
 
   return Array.from(cells);
+}
+
+export function handleRowSelect(
+  rowIndex: number,
+  dimensions: Dimensions
+): {
+  selectedTool: Tool;
+  selectedCells: number[];
+  selectedCell: null;
+} {
+  const rowCells = Array.from(
+    { length: dimensions.width },
+    (_, colIndex) => rowIndex * dimensions.width + colIndex
+  );
+  
+  return {
+    selectedTool: "multiselect",
+    selectedCells: rowCells,
+    selectedCell: null,
+  };
+}
+
+export function handleColumnSelect(
+  columnIndex: number,
+  dimensions: Dimensions
+): {
+  selectedTool: Tool;
+  selectedCells: number[];
+  selectedCell: null;
+} {
+  const columnCells = Array.from(
+    { length: dimensions.height },
+    (_, rowIndex) => rowIndex * dimensions.width + columnIndex
+  );
+  
+  return {
+    selectedTool: "multiselect",
+    selectedCells: columnCells,
+    selectedCell: null,
+  };
 } 
