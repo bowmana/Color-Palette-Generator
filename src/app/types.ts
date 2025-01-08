@@ -270,3 +270,15 @@ export interface PaletteGridProps extends
   GridOperations {
   onCellClick: (index: number) => void;
 }
+
+export interface ColumnPopControlsProps {
+  width: number;
+  height: number;
+  onColumnPop: (columnIndex: number) => void;
+}
+
+export interface RowPopControlsProps {
+  width: number;
+  height: number;
+  onRowPop: (rowIndex: number) => void;
+}

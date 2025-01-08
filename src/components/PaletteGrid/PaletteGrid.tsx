@@ -7,6 +7,8 @@ import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
 import { GridCells } from "./GridCells";
+import { ColumnPopControls } from "./ColumnPopControls";
+import { RowPopControls } from "./RowPopControls";
 
 export function PaletteGrid({
   // Grid Config
@@ -41,6 +43,8 @@ export function PaletteGrid({
   
   // Other
   onCellClick,
+  onColumnRemove,
+  onRowRemove,
 }: PaletteGridProps) {
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
@@ -312,6 +316,18 @@ export function PaletteGrid({
     setPreviewPalette(null);
   };
 
+  // Callback for popping a particular column
+  function handleColumnPop(columnIndex: number) {
+    // If you already have an “onColumnRemove” function that calls removeColumn,
+    // you can simply call it here:
+    onColumnRemove(columnIndex);
+  }
+
+  // Callback for popping a particular row
+  function handleRowPop(rowIndex: number) {
+    onRowRemove(rowIndex);
+  }
+
   return (
     <div className="relative" onContextMenu={handleContextMenu}>
       <SelectionActionsBar
@@ -347,6 +363,18 @@ export function PaletteGrid({
         onRowHover={handleRowHover}
         onHoverEnd={handleHoverEnd}
         onRowSelect={handleRowSelect}
+      />
+
+      <ColumnPopControls
+        width={dimensions.width}
+        height={dimensions.height}
+        onColumnPop={handleColumnPop}
+      />
+
+      <RowPopControls
+        width={dimensions.width}
+        height={dimensions.height}
+        onRowPop={handleRowPop}
       />
 
       <GridCells

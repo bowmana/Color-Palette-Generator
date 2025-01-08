@@ -43,45 +43,6 @@ export function GridControls({
           </button>
         </div>
       </div>
-
-      {/* Pop Controls Section */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-medium text-gray-700">
-          Remove Rows/Columns
-        </h2>
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => onPop("left")}
-            disabled={dimensions.width <= 1}
-            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-          >
-            Pop Left
-          </button>
-          <button
-            onClick={() => onPop("right")}
-            disabled={dimensions.width <= 1}
-            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-          >
-            Pop Right
-          </button>
-        </div>
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => onPop("top")}
-            disabled={dimensions.height <= 1}
-            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-          >
-            Pop Top
-          </button>
-          <button
-            onClick={() => onPop("bottom")}
-            disabled={dimensions.height <= 1}
-            className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-          >
-            Pop Bottom
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
