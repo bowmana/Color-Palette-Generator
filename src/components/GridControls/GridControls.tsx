@@ -1,12 +1,10 @@
-import {GridControlsProps } from "@/app/types";
+import { usePaletteContext } from "@/app/context/PaletteContext";
 
+export function GridControls() {
+  const { state, handlers } = usePaletteContext();
+  const { dimensions } = state;
+  const { handleTransform } = handlers;
 
-
-export function GridControls({
-  onPop,
-  onTransform,
-  dimensions,
-}: GridControlsProps) {
   const totalCells = dimensions.width * dimensions.height;
 
   return (
@@ -16,7 +14,7 @@ export function GridControls({
         <h2 className="text-sm font-medium text-gray-700">Transform Layout</h2>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => onTransform("horizontal")}
+            onClick={() => handleTransform("horizontal")}
             className={`px-3 py-1 text-sm rounded transition-colors ${
               dimensions.height === 1
                 ? "bg-blue-500 text-white"
@@ -26,7 +24,7 @@ export function GridControls({
             1×{totalCells}
           </button>
           <button
-            onClick={() => onTransform("vertical")}
+            onClick={() => handleTransform("vertical")}
             className={`px-3 py-1 text-sm rounded transition-colors ${
               dimensions.width === 1
                 ? "bg-blue-500 text-white"
@@ -36,7 +34,7 @@ export function GridControls({
             {totalCells}×1
           </button>
           <button
-            onClick={() => onTransform("square")}
+            onClick={() => handleTransform("square")}
             className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
           >
             Square-like

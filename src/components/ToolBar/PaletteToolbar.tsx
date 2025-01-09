@@ -1,23 +1,63 @@
-import {  Tool, ToolGroup, PaletteToolbarProps } from "@/app/types";
 import { useState } from "react";
 import { HexColorPicker } from "react-colorful";
+import { Tool, ToolGroup } from "@/app/types";
+import { usePaletteContext } from "@/app/context/PaletteContext";
 
-
-
-
-export function PaletteToolbar({ 
-  color, 
-  onChange, 
-  selectedTool, 
-  onToolChange, 
-  updateState, 
-  dimensions,
-  palette,
-  selectedCells,
-  lockedCells,
-  handleTransform 
-}: PaletteToolbarProps) {
+export function PaletteToolbar() {
+  const { state, handlers, updateState } = usePaletteContext();
+  const { 
+    selectedColor,
+    selectedTool,
+    dimensions,
+    palette,
+    selectedCells,
+    lockedCells 
+  } = state;
+  const { handleTransform } = handlers;
+  
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  const handleToolClick = (toolId: Tool) => {
+    if (toolId === "lockselected" && selectedCells.length > 0) {
+      const newLockedCells = [...new Set([...lockedCells, ...selectedCells])];
+      updateState({ lockedCells: newLockedCells });
+      return;
+    }
+    if (toolId === "unlockselected" && selectedCells.length > 0) {
+      const newLockedCells = lockedCells.filter(cell => !selectedCells.includes(cell));
+      updateState({ lockedCells: newLockedCells });
+      return;
+    }
+    if (toolId === "lockall") {
+      const allCells = Array.from({ length: dimensions.width * dimensions.height }, (_, i) => i);
+      updateState({ lockedCells: allCells });
+      return;
+    } else if (toolId === "unlockall") {
+      updateState({ lockedCells: [] });
+      return;
+    } else if (toolId === "fillall") {
+      const newPalette = palette.map((_, i) => 
+        lockedCells.includes(i) ? palette[i] : selectedColor
+      );
+      updateState({ palette: newPalette });
+      return;
+    } else if (toolId === "fillselected") {
+      const newPalette = [...palette];
+      selectedCells.forEach(index => {
+        if (!lockedCells.includes(index)) {
+          newPalette[index] = selectedColor;
+        }
+      });
+      updateState({ palette: newPalette });
+      return;
+    } else if (toolId === "fillrow" || toolId === "fillcolumn") {
+      updateState({ selectedTool: toolId });
+      setOpenDropdown(null);
+      return;
+    }
+    updateState({ selectedTool: toolId });
+    setOpenDropdown(null);
+  };
 
   const toolGroups: ToolGroup[] = [
     {
@@ -231,52 +271,6 @@ export function PaletteToolbar({
     },
   ];
 
-  const handleToolClick = (toolId: Tool) => {
-    if (toolId === "lockselected" && selectedCells.length > 0) {
-      const newLockedCells = [...new Set([...lockedCells, ...selectedCells])];
-      updateState({ lockedCells: newLockedCells });
-      return;
-    }
-    if (toolId === "unlockselected" && selectedCells.length > 0) {
-      const newLockedCells = lockedCells.filter(cell => !selectedCells.includes(cell));
-      updateState({ lockedCells: newLockedCells });
-      return;
-    }
-    if (toolId === "lockall") {
-      const allCells = Array.from({ length: dimensions.width * dimensions.height }, (_, i) => i);
-      updateState({ lockedCells: allCells });
-      return;
-    } else if (toolId === "unlockall") {
-      updateState({ lockedCells: [] });
-      return;
-    } else if (toolId === "fillall") {
-      const newPalette = palette.map((_, i) => 
-        lockedCells.includes(i) ? palette[i] : color
-      );
-      updateState({ palette: newPalette });
-      return;
-    } else if (toolId === "fillselected") {
-      const newPalette = [...palette];
-      selectedCells.forEach(index => {
-        if (!lockedCells.includes(index)) {
-          newPalette[index] = color;
-        }
-      });
-      updateState({ palette: newPalette });
-      return;
-    } else if (toolId === "fillrow") {
-      onToolChange(toolId);
-      setOpenDropdown(null);
-      return;
-    } else if (toolId === "fillcolumn") {
-      onToolChange(toolId);
-      setOpenDropdown(null);
-      return;
-    }
-    onToolChange(toolId);
-    setOpenDropdown(null);
-  };
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-2 mb-2">
@@ -306,7 +300,6 @@ export function PaletteToolbar({
                           setOpenDropdown(openDropdown === tool.id ? group.name : tool.id);
                         } else {
                           handleToolClick(tool.id);
-                          setOpenDropdown(null);
                         }
                       }}
                       className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 ${
@@ -358,7 +351,10 @@ export function PaletteToolbar({
       </div>
       
       <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-        <HexColorPicker color={color} onChange={onChange} />
+        <HexColorPicker 
+          color={selectedColor} 
+          onChange={(color) => updateState({ selectedColor: color })} 
+        />
       </div>
     </div>
   );

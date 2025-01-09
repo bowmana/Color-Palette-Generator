@@ -2,50 +2,40 @@ import React, { useState, useEffect } from "react";
 import { previewCopiedCells, invokeCellClick } from "@/utils/cellHelpers";
 import { getCellsInBox, getCellsInRope, handleRowSelect as selectRow, handleColumnSelect as selectColumn } from "@/utils/selectionHelpers";
 import { getMovedPalette } from "@/utils/paletteHelpers";
-import { PaletteGridProps } from "@/app/types";
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
 import { GridCells } from "./GridCells";
 import { ColumnPopControls } from "./ColumnPopControls";
 import { RowPopControls } from "./RowPopControls";
+import { usePaletteContext } from '@/app/context/PaletteContext';
 
-export function PaletteGrid({
-  // Grid Config
-  dimensions,
-  palette,
-  lockedCells,
-  
-  // Selection State
-  selectedCell,
-  selectedCells,
-  setSelectedCell,
-  setSelectedCells,
-  
-  // Copy/Paste State
-  copiedCells,
-  copiedColumn,
-  copiedRow,
-  onCopyCells,
-  onPasteCells,
-  
-  // Tool State
-  selectedColor,
-  selectedTool,
-  onToolChange,
-  
-  // Transform Operations
-  handleTransform,
-  setPalette,
-  
-  // State Management
-  updateState,
-  
-  // Other
-  onCellClick,
-  onColumnRemove,
-  onRowRemove,
-}: PaletteGridProps) {
+export function PaletteGrid() {
+  const { state, handlers, updateState } = usePaletteContext();
+  const {
+    dimensions,
+    palette,
+    lockedCells,
+    selectedCell,
+    selectedCells,
+    copiedCells,
+    copiedColumn,
+    copiedRow,
+    selectedColor,
+    selectedTool
+  } = state;
+
+  const {
+    handleTransform,
+    handleSelectionCopy: onCopyCells,
+    handleSelectionPaste: onPasteCells,
+    handleCellUpdate,
+    handleCellsUpdate,
+    handleCopyPalette: setPalette,
+    handleColumnRemove: onColumnRemove,
+    handleRowRemove: onRowRemove
+  } = handlers;
+
   const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
@@ -78,13 +68,13 @@ export function PaletteGrid({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && (selectedTool === "rotateLeft90" || selectedTool === "rotateRight90")) {
         setRotationPreview(null);
-        onToolChange(null);
+        updateState({ selectedTool: undefined });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTool, onToolChange]);
+  }, [selectedTool, updateState]);
 
   useEffect(() => {
     if (selectedTool && ["rotateLeft90", "rotateRight90"].includes(selectedTool) && selectedCells.length > 0) {
@@ -121,7 +111,20 @@ export function PaletteGrid({
   }
 
   function handleCellClickLocal(index: number, event: React.MouseEvent) {
-    invokeCellClick(index, event, onCellClick);
+    if (selectedTool === "paint" && !event.shiftKey) {
+      handleCellUpdate(index, selectedColor);
+    } else if (copiedCells && !event.shiftKey) {
+      onPasteCells(index);
+      setPreviewPalette(null);
+    } else {
+      const newSelection = event.shiftKey 
+        ? [...new Set([...selectedCells, index])]
+        : [index];
+      updateState({ 
+        selectedCell: index,
+        selectedCells: newSelection 
+      });
+    }
   }
 
   function handleMouseDown(index: number, event: React.MouseEvent) {
@@ -280,7 +283,7 @@ export function PaletteGrid({
         selectedCellsCount={selectedCells.length}
         onCopy={() => {
           if (selectedCells.length === 0) return;
-          onCopyCells?.(selectedCells);
+          onCopyCells?.();
         }}
         onClearCells={() => {
           const newPalette = [...palette];
@@ -290,8 +293,8 @@ export function PaletteGrid({
           setPalette?.(newPalette);
         }}
         onClearSelection={() => {
-          setSelectedCells([]);
-          setSelectedCell(null);
+          updateState({ selectedCells: [] });
+          updateState({ selectedCell: null });
         }}
       />
 

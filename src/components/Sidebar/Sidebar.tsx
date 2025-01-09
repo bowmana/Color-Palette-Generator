@@ -2,19 +2,22 @@ import React from 'react';
 import { CellAdjustments } from '@/components/CellAdjustments/CellAdjustments';
 import { PaletteAdjustments } from '@/components/PaletteAdjustments/PaletteAdjustments';
 import { PaletteExamples } from '@/components/PaletteExamples/PaletteExamples';
-import { AppState, Tool, SidebarProps } from '@/app/types';
+import { usePaletteContext } from '@/app/context/PaletteContext';
 
-export function Sidebar(props: SidebarProps) {
-  const {
-    currentTool,
+export function Sidebar() {
+  const { state, handlers, updateState } = usePaletteContext();
+  const { 
+    selectedTool: currentTool,
     selectedCell,
     selectedCells,
-    palette,
-    handleCellAdjustment,
-    handleMultiCellAdjustment,
-    updateState,
-    handleCopyPalette,
-  } = props;
+    palette 
+  } = state;
+  
+  const { 
+    handleCellUpdate: handleCellAdjustment,
+    handleCellsUpdate: handleMultiCellAdjustment,
+    handleCopyPalette
+  } = handlers;
 
   return (
     <div className="space-y-6">

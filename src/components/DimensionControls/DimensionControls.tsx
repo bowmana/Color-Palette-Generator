@@ -1,17 +1,18 @@
-import { DimensionControlsProps } from "@/app/types";
+import { usePaletteContext } from "@/app/context/PaletteContext";
 
 const PRESET_TOTAL_CELLS = [
-  { name: "16 cells", total: 16 },
-  { name: "32 cells", total: 32 },
-  { name: "64 cells", total: 64 },
-  { name: "128 cells", total: 128 },
-  { name: "256 cells", total: 256 },
-] as const;
+  { name: "16 Cells", total: 16 },
+  { name: "32 Cells", total: 32 },
+  { name: "64 Cells", total: 64 },
+  { name: "128 Cells", total: 128 },
+  { name: "256 Cells", total: 256 }
+];
 
-export function DimensionControls({
-  dimensions,
-  onDimensionsChange,
-}: DimensionControlsProps) {
+export function DimensionControls() {
+  const { state, handlers } = usePaletteContext();
+  const { dimensions } = state;
+  const { handleGridResize } = handlers;
+
   // Helper to get the default square-like dimensions for a total
   const getDefaultDimensions = (total: number) => {
     const sqrt = Math.sqrt(total);
@@ -22,18 +23,19 @@ export function DimensionControls({
 
   const handlePresetClick = (total: number) => {
     const defaultDims = getDefaultDimensions(total);
-    onDimensionsChange(defaultDims);
+    handleGridResize(defaultDims);
   };
 
   const handleCustomChange = (axis: "width" | "height", value: string) => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue > 0 && numValue <= 256) {
-      onDimensionsChange({
+      handleGridResize({
         ...dimensions,
         [axis]: numValue,
       });
     }
   };
+
 
   const currentTotal = dimensions.width * dimensions.height;
 
@@ -74,11 +76,11 @@ export function DimensionControls({
             onChange={(e) => {
               const layout = e.target.value;
               if (layout === "horizontal") {
-                onDimensionsChange({ width: currentTotal, height: 1 });
+                handleGridResize({ width: currentTotal, height: 1 });
               } else if (layout === "vertical") {
-                onDimensionsChange({ width: 1, height: currentTotal });
+                handleGridResize({ width: 1, height: currentTotal });
               } else {
-                onDimensionsChange(getDefaultDimensions(currentTotal));
+                handleGridResize(getDefaultDimensions(currentTotal));
               }
             }}
             className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm"
