@@ -4,7 +4,7 @@ import { PaletteProvider } from '@/app/context/PaletteContext';
 import { PaletteToolbar } from "@/components/ToolBar/PaletteToolbar";
 import { PaletteGrid } from "@/components/PaletteGrid/PaletteGrid";
 import { DimensionControls } from "@/components/DimensionControls/DimensionControls";
-import { GridControls } from "@/components/GridControls/GridControls";
+//import { GridControls } from "@/components/GridControls/GridControls";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { UndoRedoControls } from "@/components/UndoRedoControls/UndoRedoControls";
 
@@ -18,7 +18,7 @@ function MainContent() {
         <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-8">
           <div className="space-y-6">
             <DimensionControls />
-            <GridControls />
+            {/* <GridControls /> */}
             
             <div className="flex gap-8">
               <div className="w-64">

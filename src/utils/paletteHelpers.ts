@@ -165,3 +165,40 @@ export function getMovedPalette(
 
   return newPalette;
 } 
+
+
+export function getRotatedPalette(
+  palette: string[],
+  selectedCells: number[],
+  dimensions: Dimensions,
+  lockedCells: number[],
+  direction: 'rotateLeft90' | 'rotateRight90'
+): string[] {
+  const newPalette = [...palette];
+
+  // Clear original cells
+  selectedCells.forEach(cellIndex => {
+    newPalette[cellIndex] = "#ffffff";
+  });
+
+  // For each selected cell, compute the new position based on rotation
+  selectedCells.forEach(cellIndex => {
+    const row = Math.floor(cellIndex / dimensions.width);
+    const col = cellIndex % dimensions.width;
+    let targetIndex;
+
+    if (direction === "rotateLeft90") {
+      targetIndex = ((col + dimensions.width) % dimensions.width) * dimensions.width +
+        (dimensions.height - 1 - row);
+    } else {
+      targetIndex = ((dimensions.width - 1 - col) + dimensions.width) % dimensions.width *
+        dimensions.width + row;
+    }
+
+    if (!lockedCells.includes(targetIndex)) {
+      newPalette[targetIndex] = palette[cellIndex];
+    }
+  });
+
+  return newPalette;
+}
