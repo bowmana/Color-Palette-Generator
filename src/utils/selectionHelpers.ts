@@ -86,7 +86,7 @@ export function getCellsInRope(
   return Array.from(selectedCells);
 }
 
-export function handleRowSelect(
+export function selectRow(
   rowIndex: number,
   dimensions: Dimensions,
   selectedCells: number[],
@@ -117,7 +117,7 @@ export function handleRowSelect(
   return rowCells;
 }
 
-export function handleColumnSelect(
+export function selectColumn(
   columnIndex: number,
   dimensions: Dimensions,
   selectedCells: number[],

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { AppState } from '@/app/types';
 import { usePaletteGridState } from '@/app/hooks/usePaletteGridState';
 import { useHistory } from '@/app/hooks/useHistory';
@@ -11,6 +11,16 @@ type PaletteContextType = {
   canUndo: boolean;
   canRedo: boolean;
   updateState: (updates: Partial<AppState>) => void;
+  previewPalette: string[] | null;
+  setPreviewPalette: React.Dispatch<React.SetStateAction<string[] | null>>;
+  tempSelectedCells: number[];
+  setTempSelectedCells: React.Dispatch<React.SetStateAction<number[]>>;
+  isSelecting: boolean;
+  setIsSelecting: React.Dispatch<React.SetStateAction<boolean>>;
+  selectionStart: number | null;
+  setSelectionStart: React.Dispatch<React.SetStateAction<number | null>>;
+  ropePoints: number[];
+  setRopePoints: React.Dispatch<React.SetStateAction<number[]>>;
 };
 
 const PaletteContext = createContext<PaletteContextType | null>(null);
@@ -29,11 +39,23 @@ export function PaletteProvider({ children }: { children: React.ReactNode }) {
     lockedCells: [],
   });
 
+  const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
+  const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState<number | null>(null);
+  const [ropePoints, setRopePoints] = useState<number[]>([]);
+
   const updateState = (updates: Partial<AppState>) => {
     pushState({ ...state, ...updates });
   };
 
-  const handlers = usePaletteGridState(state, updateState);
+  const handlers = usePaletteGridState(state, updateState, {
+    setPreviewPalette,
+    setTempSelectedCells,
+    setIsSelecting,
+    setSelectionStart,
+    setRopePoints
+  });
 
   return (
     <PaletteContext.Provider 
@@ -44,7 +66,17 @@ export function PaletteProvider({ children }: { children: React.ReactNode }) {
         redo, 
         canUndo, 
         canRedo, 
-        updateState 
+        updateState,
+        previewPalette,
+        setPreviewPalette,
+        tempSelectedCells,
+        setTempSelectedCells,
+        isSelecting,
+        setIsSelecting,
+        selectionStart,
+        setSelectionStart,
+        ropePoints,
+        setRopePoints
       }}
     >
       {children}
