@@ -77,7 +77,28 @@ export function useLockActions(
     }
   };
 
+  const handleCellLock = (index: number, shiftKey: boolean) => {
+    let newLockedCells: number[];
+    if (lockedCells.includes(index)) {
+      // Unlock the cell(s)
+      if (shiftKey) {
+        // Only remove this cell while keeping others locked
+        newLockedCells = lockedCells.filter(i => i !== index);
+      } else {
+        // Clear all locks
+        newLockedCells = [];
+      }
+    } else {
+      // Lock the cell(s)
+      newLockedCells = shiftKey 
+        ? [...lockedCells, index]  // Add to existing locks
+        : [index];                 // Replace all locks with just this one
+    }
+    updateState({ lockedCells: newLockedCells });
+  };
+
   return {
+    handleCellLock,
     handleBoxLock,
     handleRopeLock,
     handleLockStateUpdate,

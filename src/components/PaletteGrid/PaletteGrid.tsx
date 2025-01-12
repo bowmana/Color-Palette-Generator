@@ -30,6 +30,8 @@ export function PaletteGrid() {
       toolActions.handleFillRowTool(index);
     } else if (selectedTool === "fillcolumn") {
       toolActions.handleFillColumnTool(index);
+    } else if (selectedTool === "lock") {
+      lockActions.handleCellLock(index, event.shiftKey);
     } else if (selectedTool === "rowselect") {
       const rowIndex = Math.floor(index / state.dimensions.width);
       selectionActions.handleRowSelect(rowIndex, event);
