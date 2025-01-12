@@ -1,7 +1,9 @@
 import { usePaletteContext } from '@/app/context/PaletteContext';
+import { PaletteContextType } from '@/app/types';
 
 export function UndoRedoControls() {
-  const { undo, redo, canUndo, canRedo } = usePaletteContext();
+  const { history } = usePaletteContext() as PaletteContextType ;
+  const { undo, redo, canUndo, canRedo } = history;
   
   return (
     <div className="flex gap-2 mb-4">

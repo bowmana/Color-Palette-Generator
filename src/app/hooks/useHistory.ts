@@ -17,12 +17,15 @@ export function useHistory<T>(initialState: T) {
   const canRedo = state.future.length > 0;
 
   const pushState = useCallback((newPresent: T) => {
+    if (JSON.stringify(newPresent) === JSON.stringify(state.present)) {
+      return; // Don't push if the state hasn't actually changed
+    }
     setState(currentState => ({
       past: [...currentState.past, currentState.present],
       present: newPresent,
       future: [],
     }));
-  }, []);
+  }, [state.present]);
 
   const undo = useCallback(() => {
     setState(currentState => {

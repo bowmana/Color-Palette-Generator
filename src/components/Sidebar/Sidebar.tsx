@@ -5,7 +5,7 @@ import { PaletteExamples } from '@/components/PaletteExamples/PaletteExamples';
 import { usePaletteContext } from '@/app/context/PaletteContext';
 
 export function Sidebar() {
-  const { state, handlers, updateState } = usePaletteContext();
+  const { state, updateState } = usePaletteContext();
   const { 
     selectedTool: currentTool,
     selectedCell,
@@ -13,11 +13,23 @@ export function Sidebar() {
     palette 
   } = state;
   
-  const { 
-    handleCellUpdate: handleCellAdjustment,
-    handleCellsUpdate: handleMultiCellAdjustment,
-    handleCopyPalette
-  } = handlers;
+  const handleCellAdjustment = (index: number, newColor: string) => {
+    const newPalette = [...palette];
+    newPalette[index] = newColor;
+    updateState({ palette: newPalette });
+  };
+
+  const handleMultiCellAdjustment = (newColor: string) => {
+    const newPalette = [...palette];
+    selectedCells.forEach(index => {
+      newPalette[index] = newColor;
+    });
+    updateState({ palette: newPalette });
+  };
+
+  const handleCopyPalette = (newPalette: string[]) => {
+    updateState({ palette: newPalette });
+  };
 
   return (
     <div className="space-y-6">

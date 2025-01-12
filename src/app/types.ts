@@ -1,19 +1,15 @@
 import type { ReactNode } from 'react';
+import { useToolActions } from './hooks/useToolActions';
+import { useGridTransformActions } from './hooks/useGridTransformActions';
+import { useSelectionActions } from './hooks/useSelectionActions';
+import { useLockActions } from './hooks/useLockActions';
 
 // Dimensions interface
 export interface Dimensions {
   width: number;
   height: number;
 }
-export type TransformType =
-  | "shiftup"
-  | "shiftdown"
-  | "shiftleft"
-  | "shiftright"
-  | "rotateLeft90"
-  | "rotate180"
-  | "rotateRight90"
-  | "move";
+
 
 // Tool type
 export type Tool =
@@ -40,9 +36,8 @@ export type Tool =
   | "rotateLeft90"
   | "rotateRight90";
 
-// AppState interface
-export interface AppState {
-  dimensions: Dimensions;
+export type CoreState = {
+  dimensions: { width: number; height: number };
   palette: string[];
   selectedColor: string;
   selectedTool: Tool;
@@ -54,18 +49,20 @@ export interface AppState {
   lockedCells: number[];
 }
 
-export interface PaletteToolbarProps {
-  color: string;
-  onChange: (color: string) => void;
-  selectedTool: Tool;
-  onToolChange: (tool: Tool) => void;
-  updateState: (state: Partial<AppState>) => void;
-  dimensions: { width: number; height: number };
-  palette: string[];
-  selectedCells: number[];
-  lockedCells: number[];
-  handleTransform: (transformType: string) => void;
-}
+export type UIState = {
+  previewPalette: string[] | null;
+  tempSelectedCells: number[];
+  tempLockedCells: number[];
+  isSelecting: boolean;
+  isLocking: boolean;
+  selectionStart: number | null;
+  lockStart: number | null;
+  ropePoints: number[];
+  lockRopePoints: number[];
+  rotationPreview: string[] | null;
+} 
+
+
 // ToolGroup interface
 export interface ToolGroup {
   name: string;
@@ -82,19 +79,7 @@ export interface ToolGroup {
   }[];
 }
 
-// ColorPickerProps interface
-export interface ColorPickerProps {
-  color: string;
-  onChange: (color: string) => void;
-  selectedTool: Tool;
-  onToolChange: (tool: Tool) => void;
-  updateState: (state: Partial<AppState>) => void;
-  dimensions: Dimensions;
-  palette: string[];
-  selectedCells: number[];
-  lockedCells: number[];
-  handleTransform: (transformType: string) => void;
-}
+
 
 
 export interface SelectionActionsBarProps {
@@ -111,8 +96,7 @@ export interface RowControlsProps {
   onHoverEnd: () => void;
   onRowSelect: (rowIndex: number, event?: React.MouseEvent) => void;
 }
-export 
-interface GridCellsProps {
+export interface GridCellsProps {
   dimensions: { width: number; height: number };
   palette: string[];
   previewPalette?: string[] | null;
@@ -163,29 +147,10 @@ export interface CellAdjustmentsProps {
   onColorChange: (newColor: string) => void;
 }
 
-// DimensionControlsProps interface
-export interface DimensionControlsProps {
-  dimensions: Dimensions;
-  onDimensionsChange: (dimensions: Dimensions) => void;
-}
 
 // Direction type
 export type Direction = "top" | "bottom" | "left" | "right";
 
-// Layout type
-export type Layout = "horizontal" | "vertical" | "square";
-
-// SidebarProps interface
-export interface SidebarProps {
-  currentTool: Tool;
-  selectedCell: number | null;
-  selectedCells: number[];
-  palette: string[];
-  handleCellAdjustment: (index: number, newColor: string) => void;
-  handleMultiCellAdjustment: (newColor: string) => void;
-  updateState: (updates: Partial<AppState>) => void;
-  handleCopyPalette: (colors: string[], newDimensions: Dimensions) => void;
-}
 
 // Add ColumnControlsProps interface
 export interface ColumnControlsProps {
@@ -196,80 +161,6 @@ export interface ColumnControlsProps {
   onColumnSelect: (columnIndex: number, event?: React.MouseEvent) => void;
 }
 
-// Add GridControlsProps interface
-export interface GridControlsProps {
-  onPop: (direction: Direction) => void;
-  onTransform: (layout: Layout) => void;
-  dimensions: Dimensions;
-}
-
-// Basic grid configuration
-interface GridConfig {
-  dimensions: Dimensions;
-  palette: string[];
-  lockedCells: number[];
-}
-
-// Selection state and handlers
-interface SelectionState {
-  selectedCell: number | null;
-  selectedCells: number[];
-  setSelectedCell: (cell: number | null) => void;
-  setSelectedCells: (cells: number[]) => void;
-}
-
-// Copy/Paste functionality
-interface CopyPasteState {
-  copiedCells: { indices: number[]; colors: string[] } | null;
-  copiedColumn: number | null;
-  copiedRow: number | null;
-  onCopyCells?: (indices: number[]) => void;
-  onPasteCells?: (targetIndex: number) => void;
-}
-
-// Tool-related props
-interface ToolState {
-  selectedColor: string;
-  selectedTool: Tool | null;
-  onToolChange: (tool: Tool | null) => void;
-}
-
-// Transform operations
-interface TransformOperations {
-  handleTransform: (transformType: string, targetIndex?: number) => void;
-}
-
-// State management
-interface StateManagement {
-  updateState: (updates: Partial<AppState>) => void;
-}
-
-// Grid operations
-interface GridOperations {
-  onColumnClear: (columnIndex: number) => void;
-  onRowClear: (rowIndex: number) => void;
-  onColumnCopy: (columnIndex: number) => void;
-  onColumnPaste: (columnIndex: number) => void;
-  onRowCopy: (rowIndex: number) => void;
-  onRowPaste: (rowIndex: number) => void;
-  onColumnRemove: (columnIndex: number) => void;
-  onRowRemove: (rowIndex: number) => void;
-  onRowSelect: (rowIndex: number, event?: React.MouseEvent) => void;
-  onColumnSelect: (columnIndex: number, event?: React.MouseEvent) => void;
-  setPalette?: (newPalette: string[]) => void;
-}
-
-// Main PaletteGridProps interface
-export interface PaletteGridProps extends 
-  GridConfig,
-  SelectionState,
-  CopyPasteState,
-  ToolState,
-  TransformOperations,
-  StateManagement,
-  GridOperations {
-  onCellClick: (index: number) => void;
-}
 
 export interface ColumnPopControlsProps {
   width: number;
@@ -282,3 +173,23 @@ export interface RowPopControlsProps {
   height: number;
   onRowPop: (rowIndex: number) => void;
 }
+
+
+export type PaletteContextType = {
+  state: CoreState;
+  uiState: UIState;
+  actions: {
+    tool: ReturnType<typeof useToolActions>;
+    grid: ReturnType<typeof useGridTransformActions>;
+    selection: ReturnType<typeof useSelectionActions>;
+    lock: ReturnType<typeof useLockActions>;
+  };
+  history: {
+    undo: () => void;
+    redo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+  };
+  updateState: (updates: Partial<CoreState>) => void;
+  setUIState: React.Dispatch<React.SetStateAction<UIState>>;
+};

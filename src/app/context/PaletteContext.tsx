@@ -1,32 +1,25 @@
 import { createContext, useContext, useState } from 'react';
-import { AppState } from '@/app/types';
-import { usePaletteGridState } from '@/app/hooks/usePaletteGridState';
+import { CoreState } from '@/app/types';
 import { useHistory } from '@/app/hooks/useHistory';
-
-type PaletteContextType = {
-  state: AppState;
-  handlers: ReturnType<typeof usePaletteGridState>;
-  undo: () => void;
-  redo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-  updateState: (updates: Partial<AppState>) => void;
-  previewPalette: string[] | null;
-  setPreviewPalette: React.Dispatch<React.SetStateAction<string[] | null>>;
-  tempSelectedCells: number[];
-  setTempSelectedCells: React.Dispatch<React.SetStateAction<number[]>>;
-  isSelecting: boolean;
-  setIsSelecting: React.Dispatch<React.SetStateAction<boolean>>;
-  selectionStart: number | null;
-  setSelectionStart: React.Dispatch<React.SetStateAction<number | null>>;
-  ropePoints: number[];
-  setRopePoints: React.Dispatch<React.SetStateAction<number[]>>;
-};
+import { useToolActions } from '@/app/hooks/useToolActions';
+import { useGridTransformActions } from '@/app/hooks/useGridTransformActions';
+import { useSelectionActions } from '@/app/hooks/useSelectionActions';
+import { useLockActions } from '@/app/hooks/useLockActions';
+import { PaletteContextType } from '@/app/types';
+import { UIState } from '@/app/types';
 
 const PaletteContext = createContext<PaletteContextType | null>(null);
 
 export function PaletteProvider({ children }: { children: React.ReactNode }) {
-  const { state, pushState, undo, redo, canUndo, canRedo } = useHistory<AppState>({
+  // Core state with history
+  const { 
+    state, 
+    pushState, 
+    undo, 
+    redo, 
+    canUndo, 
+    canRedo 
+  } = useHistory<CoreState>({
     dimensions: { width: 16, height: 16 },
     palette: Array(16 * 16).fill("#ffffff"),
     selectedColor: "#000000",
@@ -39,46 +32,77 @@ export function PaletteProvider({ children }: { children: React.ReactNode }) {
     lockedCells: [],
   });
 
-  const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
-  const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState<number | null>(null);
-  const [ropePoints, setRopePoints] = useState<number[]>([]);
-
-  const updateState = (updates: Partial<AppState>) => {
+  const updateState = (updates: Partial<CoreState>) => {
     pushState({ ...state, ...updates });
   };
 
-  const handlers = usePaletteGridState(state, updateState, {
-    setPreviewPalette,
-    setTempSelectedCells,
-    setIsSelecting,
-    setSelectionStart,
-    setRopePoints
+  // UI state (no history needed)
+  const [uiState, setUIState] = useState<UIState>({
+    previewPalette: null,
+    tempSelectedCells: [],
+    tempLockedCells: [],
+    isSelecting: false,
+    isLocking: false,
+    selectionStart: null,
+    lockStart: null,
+    ropePoints: [],
+    lockRopePoints: [],
+    rotationPreview: null
   });
 
+  // UI state setters
+  const uiStateSetters = {
+    setPreviewPalette: (palette: string[] | null) => 
+      setUIState(prev => ({ ...prev, previewPalette: palette })),
+    setTempSelectedCells: (cells: number[]) => 
+      setUIState(prev => ({ ...prev, tempSelectedCells: cells })),
+    setIsSelecting: (selecting: boolean) => 
+      setUIState(prev => ({ ...prev, isSelecting: selecting })),
+    setSelectionStart: (index: number | null) => 
+      setUIState(prev => ({ ...prev, selectionStart: index })),
+    setRopePoints: (points: number[]) => 
+      setUIState(prev => ({ ...prev, ropePoints: points })),
+    setTempLockedCells: (cells: number[]) => 
+      setUIState(prev => ({ ...prev, tempLockedCells: cells })),
+    setIsLocking: (locking: boolean) => 
+      setUIState(prev => ({ ...prev, isLocking: locking })),
+    setLockStart: (index: number | null) => 
+      setUIState(prev => ({ ...prev, lockStart: index })),
+    setLockRopePoints: (points: number[]) => 
+      setUIState(prev => ({ ...prev, lockRopePoints: points }))
+  };
+
+  // Actions
+  const actions = {
+    tool: useToolActions(state, updateState),
+    grid: useGridTransformActions(state, updateState),
+    selection: useSelectionActions(state, updateState, {
+      setPreviewPalette: uiStateSetters.setPreviewPalette,
+      setTempSelectedCells: uiStateSetters.setTempSelectedCells,
+      setIsSelecting: uiStateSetters.setIsSelecting,
+      setSelectionStart: uiStateSetters.setSelectionStart,
+      setRopePoints: uiStateSetters.setRopePoints
+    }),
+    lock: useLockActions(state, updateState, {
+      setTempLockedCells: uiStateSetters.setTempLockedCells,
+      setIsLocking: uiStateSetters.setIsLocking,
+      setLockStart: uiStateSetters.setLockStart,
+      setLockRopePoints: uiStateSetters.setLockRopePoints,
+      setPreviewPalette: uiStateSetters.setPreviewPalette
+    })
+  };
+
+
+  
   return (
-    <PaletteContext.Provider 
-      value={{ 
-        state, 
-        handlers, 
-        undo, 
-        redo, 
-        canUndo, 
-        canRedo, 
-        updateState,
-        previewPalette,
-        setPreviewPalette,
-        tempSelectedCells,
-        setTempSelectedCells,
-        isSelecting,
-        setIsSelecting,
-        selectionStart,
-        setSelectionStart,
-        ropePoints,
-        setRopePoints
-      }}
-    >
+    <PaletteContext.Provider value={{ 
+      state,
+      uiState,
+      actions,
+      history: { undo, redo, canUndo, canRedo },
+      updateState,
+      setUIState
+    }}>
       {children}
     </PaletteContext.Provider>
   );

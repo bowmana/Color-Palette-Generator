@@ -9,9 +9,9 @@ const PRESET_TOTAL_CELLS = [
 ];
 
 export function DimensionControls() {
-  const { state, handlers } = usePaletteContext();
+  const { state, actions } = usePaletteContext();
   const { dimensions } = state;
-  const { handleGridResize } = handlers;
+  const { handleGridResize } = actions.grid;
 
   // Helper to get the default square-like dimensions for a total
   const getDefaultDimensions = (total: number) => {

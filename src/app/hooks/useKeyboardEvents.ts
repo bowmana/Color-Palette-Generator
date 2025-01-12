@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { AppState } from '@/app/types';
+import { CoreState } from '@/app/types';
 
 export function useKeyboardEvents(
-  state: AppState,
-  updateState: (updates: Partial<AppState>) => void,
+  state: CoreState,
+  updateState: (updates: Partial<CoreState>) => void,
   setPreviewPalette: (palette: string[] | null) => void,
   setRotationPreview: (palette: string[] | null) => void,
 ) {

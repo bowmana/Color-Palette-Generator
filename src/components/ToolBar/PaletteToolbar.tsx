@@ -4,7 +4,7 @@ import { Tool, ToolGroup } from "@/app/types";
 import { usePaletteContext } from "@/app/context/PaletteContext";
 
 export function PaletteToolbar() {
-  const { state, handlers, updateState } = usePaletteContext();
+  const { state, actions, updateState } = usePaletteContext();
   const { 
     selectedColor,
     selectedTool,
@@ -13,7 +13,6 @@ export function PaletteToolbar() {
     selectedCells,
     lockedCells 
   } = state;
-  const { handleTransform } = handlers;
   
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
@@ -55,7 +54,7 @@ export function PaletteToolbar() {
       setOpenDropdown(null);
       return;
     }
-    updateState({ selectedTool: toolId });
+    actions.tool.handleToolSelect(toolId);
     setOpenDropdown(null);
   };
 

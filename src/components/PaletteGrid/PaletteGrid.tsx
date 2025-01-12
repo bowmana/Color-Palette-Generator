@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 
-import { getMovedPalette, getRotatedPalette } from "@/utils/paletteHelpers";
+
 import { ColumnControls } from "./ColumnControls";
 import { RowControls } from "./RowControls";
 import { SelectionActionsBar } from "./SelectionActionsBar";
@@ -8,101 +8,86 @@ import { GridCells } from "./GridCells";
 import { ColumnPopControls } from "./ColumnPopControls";
 import { RowPopControls } from "./RowPopControls";
 import { usePaletteContext } from '@/app/context/PaletteContext';
-import { useToolActions } from '@/app/hooks/useToolActions';
-import { useSelectionActions } from '@/app/hooks/useSelectionActions';
+import { PaletteContextType } from "@/app/types";
+import { useLockActions } from "@/app/hooks/useLockActions";
 
 export function PaletteGrid() {
-  const { state, handlers, updateState } = usePaletteContext();
-  const {
-    dimensions,
-    palette,
-    lockedCells,
-    selectedCell,
-    selectedCells,
-    copiedCells,
-    copiedColumn,
-    copiedRow,
-    selectedColor,
-    selectedTool
-  } = state;
+  const { 
+    state, 
+    uiState,
+    actions,
+    setUIState
+  } = usePaletteContext() as PaletteContextType;
 
-  const {
-    
-    handleSelectionCopy: onCopyCells,
-    handleSelectionPaste: onPasteCells,
-
-    handleColumnRemove: onColumnRemove,
-    handleRowRemove: onRowRemove
-  } = handlers;
-
-  const [previewPalette, setPreviewPalette] = useState<string[] | null>(null);
-  const [selectionStart, setSelectionStart] = useState<number | null>(null);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [ropePoints, setRopePoints] = useState<number[]>([]);
-  const [tempSelectedCells, setTempSelectedCells] = useState<number[]>([]);
-  const [tempLockedCells, setTempLockedCells] = useState<number[]>([]);
-  const [rotationPreview, setRotationPreview] = useState<string[] | null>(null);
-
-  const toolActions = useToolActions(state, {
-    handleCellUpdate: handlers.handleCellUpdate,
-    handleCopyPalette: handlers.handleCopyPalette
-  }, updateState);
-  
-  const selectionActions = useSelectionActions(state, updateState, {
-    setPreviewPalette,
-    setTempSelectedCells,
-    setIsSelecting,
-    setSelectionStart,
-    setRopePoints
-  });
+  const { tool: toolActions, grid: gridTransform, selection: selectionActions, lock: lockActions } = actions;
 
   function handleCellClickLocal(index: number, event: React.MouseEvent) {
+    const { selectedTool, copiedCells } = state;
+    
     if (selectedTool === "paint" && !event.shiftKey) {
       toolActions.handlePaintTool(index);
     } else if (selectedTool === "fillrow") {
       toolActions.handleFillRowTool(index);
     } else if (selectedTool === "fillcolumn") {
       toolActions.handleFillColumnTool(index);
+    } else if (selectedTool === "rowselect") {
+      const rowIndex = Math.floor(index / state.dimensions.width);
+      selectionActions.handleRowSelect(rowIndex, event);
+    } else if (selectedTool === "columnselect") {
+      const columnIndex = index % state.dimensions.width;
+      selectionActions.handleColumnSelect(columnIndex, event);
     } else if (copiedCells && !event.shiftKey) {
-      onPasteCells(index);
-      setPreviewPalette(null);
+      selectionActions.handleSelectionPaste(index);
+      setUIState(prev => ({ ...prev, previewPalette: null }));
     } else {
       selectionActions.handleCellSelect(index, event.shiftKey);
     }
   }
 
   function handleMouseMove(index: number) {
-    if (selectedTool === "move") {
-      const startRow = Math.floor(selectedCells[0] / dimensions.width);
-      const startCol = selectedCells[0] % dimensions.width;
-      const targetRow = Math.floor(index / dimensions.width);
-      const targetCol = index % dimensions.width;
-      
-      const newPalette = getMovedPalette(
-        palette,
-        selectedCells,
-        dimensions,
-        targetRow - startRow,
-        targetCol - startCol,
-        lockedCells
+    const { selectedTool } = state;
+    if (selectedTool === "boxselect" || selectedTool === "ropeselect") {
+      selectionActions.handleMouseMovement(
+        index, 
+        uiState.isSelecting, 
+        uiState.selectionStart, 
+        uiState.ropePoints
       );
-      setPreviewPalette(newPalette);
-    } else {
-      selectionActions.handleMouseMovement(index, isSelecting, selectionStart, ropePoints);
+    } else if (selectedTool === "boxlock" || selectedTool === "ropelock") {
+      lockActions.handleMouseMovement(
+        index,
+        uiState.isLocking,
+        uiState.lockStart,
+        uiState.lockRopePoints
+      );
     }
   }
 
   function handleMouseUp(event: React.MouseEvent) {
-    selectionActions.handleSelectionStateUpdate(tempSelectedCells, event.shiftKey);
-    setIsSelecting(false);
-    setSelectionStart(null);
-    setRopePoints([]);
-    setTempSelectedCells([]);
-    setTempLockedCells([]);
+    const { selectedTool } = state;
+    if (selectedTool === "boxselect" || selectedTool === "ropeselect") {
+      selectionActions.handleSelectionStateUpdate(uiState.tempSelectedCells, event.shiftKey);
+      setUIState(prev => ({ 
+        ...prev, 
+        isSelecting: false, 
+        selectionStart: null, 
+        ropePoints: [] 
+      }));
+    } else if (selectedTool === "boxlock" || selectedTool === "ropelock") {
+      lockActions.handleLockStateUpdate(uiState.tempLockedCells, event.shiftKey);
+      setUIState(prev => ({ 
+        ...prev, 
+        isLocking: false, 
+        lockStart: null, 
+        lockRopePoints: [] 
+      }));
+    }
   }
 
 
   const handleColumnHover = (columnIndex: number) => {
+    const { copiedColumn, lockedCells, palette, dimensions } = state;
+    
     if (!copiedColumn) return;
     
     const newPalette = [...palette];
@@ -113,10 +98,12 @@ export function PaletteGrid() {
         newPalette[targetIndex] = palette[sourceIndex];
       }
     }
-    setPreviewPalette(newPalette);
+    setUIState(prev => ({ ...prev, previewPalette: newPalette }));
   };
 
   const handleRowHover = (rowIndex: number) => {
+    const { copiedRow, lockedCells, palette, dimensions } = state;
+    
     if (!copiedRow) return;
     
     const newPalette = [...palette];
@@ -127,27 +114,17 @@ export function PaletteGrid() {
         newPalette[targetIndex] = palette[sourceIndex];
       }
     }
-    setPreviewPalette(newPalette);
-  };
+    setUIState(prev => ({ ...prev, previewPalette: newPalette }));
+    };
 
   const handleHoverEnd = () => {
-    setPreviewPalette(null);
+    setUIState(prev => ({ ...prev, previewPalette: null }));
   };
 
-  // Callback for popping a particular column
-  function handleColumnPop(columnIndex: number) {
-    // If you already have an “onColumnRemove” function that calls removeColumn,
-    // you can simply call it here:
-    onColumnRemove(columnIndex);
-  }
-
-  // Callback for popping a particular row
-  function handleRowPop(rowIndex: number) {
-    onRowRemove(rowIndex);
-  }
 
   function handleCellHoverLocal(index: number) {
-    if (selectedTool === "move") {
+    const { selectedTool } = state;
+    if ((selectedTool === "boxselect" || selectedTool === "ropeselect") && uiState.isSelecting) {
       handleMouseMove(index);
     } else {
       selectionActions.handleCellHover(index);
@@ -155,7 +132,13 @@ export function PaletteGrid() {
   }
 
   function handleMouseDown(index: number, event: React.MouseEvent) {
-    selectionActions.handleMouseDown(index, event);
+    const { selectedTool } = state;
+    
+    if (selectedTool === "boxselect" || selectedTool === "ropeselect") {
+      selectionActions.handleMouseDown(index, event);
+    } else if (selectedTool === "boxlock" || selectedTool === "ropelock") {
+      lockActions.handleMouseDown(index, event);
+    }
   }
 
   function handleContextMenu(event: React.MouseEvent) {
@@ -165,58 +148,58 @@ export function PaletteGrid() {
   return (
     <div className="relative" onContextMenu={handleContextMenu}>
 <SelectionActionsBar
-  selectedCellsCount={selectedCells.length}
+  selectedCellsCount={state.selectedCells.length}
   onCopy={selectionActions.handleSelectionCopy}
   onClearCells={selectionActions.handleClearSelectedCells}
   onClearSelection={selectionActions.handleClearSelection}
 />
 
       <ColumnControls
-        width={dimensions.width}
-        copiedColumn={copiedColumn}
+        width={state.dimensions.width}
+        copiedColumn={state.copiedColumn}
         onColumnHover={handleColumnHover}
         onHoverEnd={handleHoverEnd}
         onColumnSelect={selectionActions.handleColumnSelect}
       />
 
       <RowControls
-        height={dimensions.height}
-        copiedRow={copiedRow}
+        height={state.dimensions.height}
+        copiedRow={state.copiedRow}
         onRowHover={handleRowHover}
         onHoverEnd={handleHoverEnd}
         onRowSelect={selectionActions.handleRowSelect}
       />
 
       <ColumnPopControls
-        width={dimensions.width}
-        height={dimensions.height}
-        onColumnPop={handleColumnPop}
+        width={state.dimensions.width}
+        height={state.dimensions.height}
+        onColumnPop={gridTransform.handleColumnRemove}
       />
 
       <RowPopControls
-        width={dimensions.width}
-        height={dimensions.height}
-        onRowPop={handleRowPop}
+        width={state.dimensions.width}
+        height={state.dimensions.height}
+        onRowPop={gridTransform.handleRowRemove}
       />
 
       <GridCells
-        dimensions={dimensions}
-        palette={palette}
-        previewPalette={previewPalette}
-        rotationPreview={rotationPreview}
-        lockedCells={lockedCells}
-        selectedTool={selectedTool}
-        selectedCell={selectedCell}
-        selectedCells={selectedCells}
-        tempSelectedCells={tempSelectedCells}
-        tempLockedCells={tempLockedCells}
-        handleCellHover={handleCellHoverLocal}
+        dimensions={state.dimensions}
+        palette={state.palette}
+        previewPalette={uiState.previewPalette}
+        rotationPreview={uiState.rotationPreview}
+        lockedCells={state.lockedCells}
+        selectedTool={state.selectedTool}
+        selectedCell={state.selectedCell}
+        selectedCells={state.selectedCells}
+        tempSelectedCells={uiState.tempSelectedCells}
+        tempLockedCells={uiState.tempLockedCells}
+        isSelecting={uiState.isSelecting}
         handleCellClick={handleCellClickLocal}
         handleMouseDown={handleMouseDown}
         handleMouseMove={handleMouseMove}
         handleMouseUp={handleMouseUp}
+        handleCellHover={handleCellHoverLocal}
         handleHoverEnd={handleHoverEnd}
-        isSelecting={isSelecting}
       />
     </div>
   );

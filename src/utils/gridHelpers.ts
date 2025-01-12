@@ -1,4 +1,4 @@
-import { Direction, Layout, Dimensions } from "@/app/types";
+import { Direction, Dimensions } from "@/app/types";
 
 export function reshapeGrid(
   colors: string[],
@@ -77,43 +77,4 @@ export function popGridSection(
     newColors: tempGrid,
     newDimensions: { width: newWidth, height: newHeight },
   };
-}
-export function transformGridLayout(
-  colors: string[],
-  currentDimensions: { width: number; height: number },
-  layout: Layout
-): {
-  newColors: string[];
-  newDimensions: { width: number; height: number };
-} {
-  const totalCells = currentDimensions.width * currentDimensions.height;
-
-  let newDimensions: { width: number; height: number };
-
-  switch (layout) {
-    case "horizontal":
-      newDimensions = { width: totalCells, height: 1 };
-      break;
-    case "vertical":
-      newDimensions = { width: 1, height: totalCells };
-      break;
-    case "square":
-      const sqrt = Math.sqrt(totalCells);
-      const width = Math.ceil(sqrt);
-      newDimensions = {
-        width,
-        height: Math.ceil(totalCells / width),
-      };
-      break;
-  }
-
-  // Create new array for transformed grid
-  const newColors: string[] = new Array(totalCells).fill("#ffffff");
-
-  // Simply copy cells in order - this preserves the natural flow
-  for (let i = 0; i < totalCells; i++) {
-    newColors[i] = colors[i];
-  }
-
-  return { newColors, newDimensions };
 }

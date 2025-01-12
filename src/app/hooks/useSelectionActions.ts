@@ -1,9 +1,9 @@
-import { AppState } from "@/app/types";
+import { CoreState } from "@/app/types";
 import { getCellsInBox, getCellsInRope, selectRow, selectColumn } from "@/utils/selectionHelpers";
 
 export function useSelectionActions(
-  state: AppState,
-  updateState: (updates: Partial<AppState>) => void,
+  state: CoreState,
+  updateState: (updates: Partial<CoreState>) => void,
   setters: {
     setPreviewPalette: (palette: string[] | null) => void;
     setTempSelectedCells: (cells: number[]) => void;
@@ -12,7 +12,7 @@ export function useSelectionActions(
     setRopePoints: (points: number[]) => void;
   }
 ) {
-  const { palette, selectedCells, dimensions, lockedCells } = state;
+  const { palette, selectedCells, dimensions, lockedCells, selectedColor } = state;
 
   // Basic Selection
   const handleCellSelect = (index: number, shiftKey: boolean) => {
@@ -36,11 +36,31 @@ export function useSelectionActions(
   };
   // Box/Rope Selection
   const handleBoxSelect = (startIndex: number, currentIndex: number) => {
-    setters.setTempSelectedCells(getCellsInBox(startIndex, currentIndex, dimensions));
+    const selectedCells = getCellsInBox(startIndex, currentIndex, dimensions);
+    setters.setTempSelectedCells(selectedCells);
+    
+    // Create preview palette
+    const newPalette = [...palette];
+    selectedCells.forEach(index => {
+      if (!lockedCells.includes(index)) {
+        newPalette[index] = selectedColor || '#ffffff';
+      }
+    });
+    setters.setPreviewPalette(newPalette);
   };
 
   const handleRopeSelect = (points: number[]) => {
-    setters.setTempSelectedCells(getCellsInRope(points, dimensions));
+    const selectedCells = getCellsInRope(points, dimensions);
+    setters.setTempSelectedCells(selectedCells);
+    
+    // Create preview palette
+    const newPalette = [...palette];
+    selectedCells.forEach(index => {
+      if (!lockedCells.includes(index)) {
+        newPalette[index] = selectedColor || '#ffffff';
+      }
+    });
+    setters.setPreviewPalette(newPalette);
   };
 
   const handleSelectionStateUpdate = (
@@ -51,6 +71,13 @@ export function useSelectionActions(
       ? [...new Set([...selectedCells, ...tempSelectedCells])]
       : tempSelectedCells;
     updateState({ selectedCells: newSelection });
+    
+    // Clear preview states
+    setters.setPreviewPalette(null);
+    setters.setTempSelectedCells([]);
+    setters.setIsSelecting(false);
+    setters.setSelectionStart(null);
+    setters.setRopePoints([]);
   };
 
   // Copy/Paste
