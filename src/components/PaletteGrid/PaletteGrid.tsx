@@ -128,6 +128,8 @@ export function PaletteGrid() {
     const { selectedTool } = state;
     if ((selectedTool === "boxselect" || selectedTool === "ropeselect") && uiState.isSelecting) {
       handleMouseMove(index);
+    } else if ((selectedTool === "boxlock" || selectedTool === "ropelock") && uiState.isLocking) {
+      handleMouseMove(index);
     } else {
       selectionActions.handleCellHover(index);
     }
